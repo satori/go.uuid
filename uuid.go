@@ -1,6 +1,6 @@
 /*
 The uuid package provides implementation of Universally Unique Identifier (UUID) structure
-with functions for generating versions 3, 4 and 5 as specified in RFC 4122
+with functions for generating versions 1, 3, 4 and 5 as specified in RFC 4122
 */
 package uuid
 
@@ -8,8 +8,11 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
+	"encoding/binary"
 	"fmt"
 	"hash"
+	"net"
+	"time"
 )
 
 // UUID layout variants.
@@ -19,6 +22,13 @@ const (
 	VariantMicrosoft
 	VariantFuture
 )
+
+// Difference in 100-nanosecond intervals between
+// UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970)
+const epochStart = 122192928000000000
+
+// Clock sequence storage
+var clockSequence uint16
 
 // UUID representation compliant with specification
 // described in RFC 4122.
@@ -65,6 +75,37 @@ func (u *UUID) setVersion(v byte) {
 // Sets variant bits as described in RFC 4122.
 func (u *UUID) setVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
+}
+
+// Returns UUID based on current timestamp and MAC address.
+func NewV1() (u *UUID, err error) {
+	u = new(UUID)
+
+	time_now := epochStart + uint64(time.Now().UnixNano()/100)
+
+	binary.BigEndian.PutUint32(u[0:], uint32(time_now))
+	binary.BigEndian.PutUint16(u[4:], uint16(time_now>>32))
+	binary.BigEndian.PutUint16(u[6:], uint16(time_now>>48))
+
+	if clockSequence == 0 {
+		buf := make([]byte, 2)
+		_, err = rand.Read(buf)
+		clockSequence = binary.BigEndian.Uint16(buf)
+	}
+
+	binary.BigEndian.PutUint16(u[8:], clockSequence)
+
+	interfaces, _ := net.Interfaces()
+	for _, iface := range interfaces {
+		if len(iface.HardwareAddr) >= 6 {
+			copy(u[10:], iface.HardwareAddr)
+			break
+		}
+	}
+
+	u.setVersion(1)
+	u.setVariant()
+	return
 }
 
 // Returns UUID based on MD5 hash of namespace UUID and name.
