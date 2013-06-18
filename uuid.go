@@ -28,7 +28,7 @@ const (
 // UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970).
 const epochStart = 122192928000000000
 
-// Clock sequence storage
+// Clock sequence storage.
 var clockSequence uint16
 
 // UUID representation compliant with specification

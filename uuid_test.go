@@ -11,11 +11,11 @@ func TestString(t *testing.T) {
 }
 
 func TestEqual(t *testing.T) {
-	if !Equal(NamespaceDNS, NamespaceDNS){
+	if !Equal(NamespaceDNS, NamespaceDNS) {
 		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
 	}
 
-	if Equal(NamespaceDNS, NamespaceURL){
+	if Equal(NamespaceDNS, NamespaceURL) {
 		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceURL)
 	}
 }
