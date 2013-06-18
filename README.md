@@ -26,4 +26,5 @@ Use the `go` command:
 ## Copyright
 
 Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>.
+
 UUID package released under MIT License. See [LICENSE](https://github.com/satori/uuid/blob/master/LICENSE) for details.
