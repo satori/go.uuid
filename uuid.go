@@ -1,8 +1,15 @@
+/*
+The uuid package provides implementation of Universally Unique Identifier (UUID) structure
+with functions for generating versions 3, 4 and 5 as specified in RFC 4122
+*/
 package uuid
 
 import (
+	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha1"
 	"fmt"
+	"hash"
 )
 
 // UUID layout variants.
@@ -16,6 +23,13 @@ const (
 // UUID representation compliant with specification
 // described in RFC 4122.
 type UUID [16]byte
+
+var (
+	NamespaceDNS  = UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceURL  = UUID{0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceOID  = UUID{0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceX500 = UUID{0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+)
 
 // Returns algorithm version used to generate UUID
 // RFC 4122 describes version 1, 3, 4 and 5.
@@ -53,6 +67,17 @@ func (u *UUID) setVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
+// Returns UUID based on MD5 hash of namespace UUID and name.
+func NewV3(ns UUID, name string) (u *UUID, err error) {
+	u, err = newFromHash(md5.New(), ns, name)
+	if err != nil {
+		return
+	}
+	u.setVersion(3)
+	u.setVariant()
+	return
+}
+
 // Returns random UUID.
 func NewV4() (u *UUID, err error) {
 	u = new(UUID)
@@ -62,5 +87,25 @@ func NewV4() (u *UUID, err error) {
 	}
 	u.setVersion(4)
 	u.setVariant()
+	return
+}
+
+// Returns UUID based on SHA-1 hash of namespace UUID and name.
+func NewV5(ns UUID, name string) (u *UUID, err error) {
+	u, err = newFromHash(sha1.New(), ns, name)
+	if err != nil {
+		return
+	}
+	u.setVersion(5)
+	u.setVariant()
+	return
+}
+
+// Returns UUID based on hashing of namespace UUID and name
+func newFromHash(h hash.Hash, ns UUID, name string) (u *UUID, err error) {
+	u = new(UUID)
+	h.Write(ns[:])
+	h.Write([]byte(name))
+	copy(u[:], h.Sum(nil))
 	return
 }

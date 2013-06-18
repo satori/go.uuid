@@ -64,6 +64,22 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestNewV3(t *testing.T) {
+	u, err := NewV3(NamespaceDNS, "www.example.com")
+
+	if err != nil {
+		t.Errorf("UUIDv3 generated with error: %s", err.Error())
+	}
+
+	if u.Version() != 3 {
+		t.Errorf("UUIDv3 generated with incorrect version: %d", u.Version())
+	}
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv3 generated with incorrect variant: %d", u.Variant())
+	}
+}
+
 func TestNewV4(t *testing.T) {
 	u, err := NewV4()
 
@@ -78,5 +94,21 @@ func TestNewV4(t *testing.T) {
 
 	if u.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv4 generated with incorrect variant: %d", u.Variant())
+	}
+}
+
+func TestNewV5(t *testing.T) {
+	u, err := NewV5(NamespaceDNS, "www.example.com")
+
+	if err != nil {
+		t.Errorf("UUIDv5 generated with error: %s", err.Error())
+	}
+
+	if u.Version() != 5 {
+		t.Errorf("UUIDv5 generated with incorrect version: %d", u.Version())
+	}
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv5 generated with incorrect variant: %d", u.Variant())
 	}
 }
