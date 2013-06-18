@@ -5,12 +5,33 @@ import (
 	"crypto/rand"
 )
 
+// UUID layout variants.
+const (
+	VariantNCS = iota
+	VariantRFC4122
+	VariantMicrosoft
+	VariantFuture
+)
+
 type UUID [16]byte
 
 // Returns algorithm version used to generate UUID
 // RFC 4122 describes version 1, 3, 4 and 5.
 func (u *UUID) Version() uint {
 	return uint(u[6] >> 4)
+}
+
+// Returns UUID layout variant.
+func (u *UUID) Variant() uint {
+	switch {
+		case (u[8] & 0x80) == 0x00:
+			return VariantNCS
+		case (u[8] & 0xc0) | 0x80 == 0x80:
+			return VariantRFC4122
+		case (u[8] & 0xe0) | 0xc0 == 0xc0:
+			return VariantMicrosoft
+	}
+	return VariantFuture
 }
 
 // Returns canonical string representation of UUID:

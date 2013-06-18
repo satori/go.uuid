@@ -22,14 +22,38 @@ func TestSetVersion(t *testing.T) {
 }
 
 func TestVariant(t *testing.T) {
-	//u := new(UUID)
-	// TODO: implement u.Variant()
+	u1 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	if u1.Variant() != VariantNCS {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantNCS, u1.Variant())
+	}
+
+	u2 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	if u2.Variant() != VariantRFC4122 {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantRFC4122, u2.Variant())
+	}
+
+	u3 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	if u3.Variant() != VariantMicrosoft {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantMicrosoft, u3.Variant())
+	}
+
+	u4 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+
+	if u4.Variant() != VariantFuture {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantFuture, u4.Variant())
+	}
 }
 
 func TestSetVariant(t *testing.T) {
 	u := new(UUID)
 	u.setVariant()
-	// TODO: implement u.Variant()
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("Incorrect variant for UUID after u.setVariant(): %d", u.Variant())
+	}
 }
 
 func TestString(t *testing.T) {
@@ -51,5 +75,8 @@ func TestNewV4(t *testing.T) {
 	if u.Version() != 4 {
 		t.Errorf("UUIDv4 generated with incorrect version: %d", u.Version())
 	}
-	// TODO: check variant
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv4 generated with incorrect variant: %d", u.Variant())
+	}
 }
