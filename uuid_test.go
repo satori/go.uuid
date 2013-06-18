@@ -10,6 +10,16 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestEqual(t *testing.T) {
+	if Equal(NamespaceDNS, NamespaceDNS) != true {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
+	}
+
+	if Equal(NamespaceDNS, NamespaceURL) != false {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceURL)
+	}
+}
+
 func TestVersion(t *testing.T) {
 	u := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
