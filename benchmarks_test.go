@@ -11,6 +11,12 @@ func BenchmarkNewV1(b *testing.B) {
 	}
 }
 
+func BenchmarkNewV2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		uuid.NewV2(uuid.DomainPerson)
+	}
+}
+
 func BenchmarkNewV3(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		uuid.NewV3(uuid.NamespaceDNS, "www.example.com")

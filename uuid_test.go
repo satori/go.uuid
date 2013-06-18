@@ -95,6 +95,22 @@ func TestNewV1(t *testing.T) {
 	}
 }
 
+func TestNewV2(t *testing.T) {
+	u, err := NewV2(DomainPerson)
+
+	if err != nil {
+		t.Errorf("UUIDv2 generated with error: %s", err.Error())
+	}
+
+	if u.Version() != 2 {
+		t.Errorf("UUIDv2 generated with incorrect version: %d", u.Version())
+	}
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv2 generated with incorrect variant: %d", u.Variant())
+	}
+}
+
 func TestNewV3(t *testing.T) {
 	u, err := NewV3(NamespaceDNS, "www.example.com")
 

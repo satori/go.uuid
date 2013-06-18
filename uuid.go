@@ -1,6 +1,7 @@
 /*
-The uuid package provides implementation of Universally Unique Identifier (UUID) structure
-with functions for generating versions 1, 3, 4 and 5 as specified in RFC 4122
+This package provides implementation of Universally Unique Identifier (UUID).
+Supported versions are 1, 3, 4 and 5 (as specified in RFC 4122) and
+version 2 (as specified in DCE 1.1).
 */
 package uuid
 
@@ -10,9 +11,11 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"hash"
 	"net"
+	"os"
 	"time"
 )
 
@@ -22,6 +25,12 @@ const (
 	VariantRFC4122
 	VariantMicrosoft
 	VariantFuture
+)
+
+const (
+	DomainPerson = iota
+	DomainGroup
+	DomainOrg
 )
 
 // Difference in 100-nanosecond intervals between
@@ -49,7 +58,6 @@ func Equal(u1 *UUID, u2 *UUID) bool {
 }
 
 // Returns algorithm version used to generate UUID.
-// RFC 4122 describes version 1, 3, 4 and 5.
 func (u *UUID) Version() uint {
 	return uint(u[6] >> 4)
 }
@@ -112,6 +120,25 @@ func NewV1() (u *UUID, err error) {
 
 	u.setVersion(1)
 	u.setVariant()
+	return
+}
+
+// Returns DCE Security UUID.
+func NewV2(domain byte) (u *UUID, err error) {
+	id := 0
+	switch domain {
+	case DomainPerson:
+		id = os.Getuid()
+	case DomainGroup:
+		id = os.Getgid()
+	default:
+		err = errors.New("Unsupported domain")
+		return
+	}
+	u, err = NewV1()
+	u[9] = domain
+	binary.BigEndian.PutUint32(u[0:], uint32(id))
+	u.setVersion(2)
 	return
 }
 

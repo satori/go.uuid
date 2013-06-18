@@ -14,6 +14,15 @@ func ExampleNewV1() {
 	fmt.Println(u1)
 }
 
+func ExampleNewV2() {
+	u2, err := uuid.NewV2(uuid.DomainPerson)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+	fmt.Println(u2)
+}
+
 func ExampleNewV3() {
 	u3, err := uuid.NewV3(uuid.NamespaceDNS, "golang.org")
 	if err != nil {
