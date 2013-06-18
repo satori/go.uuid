@@ -24,7 +24,7 @@ const (
 )
 
 // Difference in 100-nanosecond intervals between
-// UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970)
+// UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970).
 const epochStart = 122192928000000000
 
 // Clock sequence storage
@@ -34,6 +34,7 @@ var clockSequence uint16
 // described in RFC 4122.
 type UUID [16]byte
 
+// Predefined namespace UUIDs.
 var (
 	NamespaceDNS  = UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	NamespaceURL  = UUID{0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
@@ -142,7 +143,7 @@ func NewV5(ns UUID, name string) (u *UUID, err error) {
 	return
 }
 
-// Returns UUID based on hashing of namespace UUID and name
+// Returns UUID based on hashing of namespace UUID and name.
 func newFromHash(h hash.Hash, ns UUID, name string) (u *UUID, err error) {
 	u = new(UUID)
 	h.Write(ns[:])
