@@ -27,6 +27,7 @@ const (
 	VariantFuture
 )
 
+// UUID DCE domains.
 const (
 	DomainPerson = iota
 	DomainGroup
@@ -37,8 +38,35 @@ const (
 // UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970).
 const epochStart = 122192928000000000
 
-// Clock sequence storage.
-var clockSequence uint16
+// UUID v1/v2 storage.
+var (
+	clockSequence uint16
+	lastTime      uint64
+	hardwareAddr  [6]byte
+	posixUID      = uint32(os.Getuid())
+	posixGID      = uint32(os.Getgid())
+)
+
+// Initialize storage
+func init() {
+	buf := make([]byte, 2)
+	_, err := rand.Read(buf)
+	if err != nil {
+		panic("rand.Read failed during package initialization")
+	}
+	clockSequence = binary.BigEndian.Uint16(buf)
+
+	// Initialize hardwareAddr
+	interfaces, err := net.Interfaces()
+	if err == nil {
+		for _, iface := range interfaces {
+			if len(iface.HardwareAddr) >= 6 {
+				copy(hardwareAddr[:], iface.HardwareAddr)
+				break
+			}
+		}
+	}
+}
 
 // UUID representation compliant with specification
 // described in RFC 4122.
@@ -92,53 +120,59 @@ func (u *UUID) setVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
+// Returns UUID epoch timestamp
+func getTimestamp() uint64 {
+	timeNow := epochStart + uint64(time.Now().UnixNano()/100)
+	// Clock changed backwards since last UUID generation.
+	// Should increase clock sequence.
+	if timeNow < lastTime {
+		clockSequence++
+	}
+	lastTime = timeNow
+	return timeNow
+}
+
 // Returns UUID based on current timestamp and MAC address.
 func NewV1() (u *UUID, err error) {
 	u = new(UUID)
 
-	time_now := epochStart + uint64(time.Now().UnixNano()/100)
+	timeNow := getTimestamp()
 
-	binary.BigEndian.PutUint32(u[0:], uint32(time_now))
-	binary.BigEndian.PutUint16(u[4:], uint16(time_now>>32))
-	binary.BigEndian.PutUint16(u[6:], uint16(time_now>>48))
-
-	if clockSequence == 0 {
-		buf := make([]byte, 2)
-		_, err = rand.Read(buf)
-		clockSequence = binary.BigEndian.Uint16(buf)
-	}
-
+	binary.BigEndian.PutUint32(u[0:], uint32(timeNow))
+	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
+	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
 	binary.BigEndian.PutUint16(u[8:], clockSequence)
 
-	interfaces, _ := net.Interfaces()
-	for _, iface := range interfaces {
-		if len(iface.HardwareAddr) >= 6 {
-			copy(u[10:], iface.HardwareAddr)
-			break
-		}
-	}
+	copy(u[10:], hardwareAddr[:])
 
 	u.setVersion(1)
 	u.setVariant()
 	return
 }
 
-// Returns DCE Security UUID.
+// Returns DCE Security UUID based on POSIX UID/GID.
 func NewV2(domain byte) (u *UUID, err error) {
-	id := 0
+	u = new(UUID)
+
 	switch domain {
 	case DomainPerson:
-		id = os.Getuid()
+		binary.BigEndian.PutUint32(u[0:], posixUID)
 	case DomainGroup:
-		id = os.Getgid()
+		binary.BigEndian.PutUint32(u[0:], posixGID)
 	default:
 		err = errors.New("Unsupported domain")
 		return
 	}
-	u, err = NewV1()
+
+	timeNow := getTimestamp()
+
+	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
+	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
+	binary.BigEndian.PutUint16(u[8:], clockSequence)
 	u[9] = domain
-	binary.BigEndian.PutUint32(u[0:], uint32(id))
+	copy(u[10:], hardwareAddr[:])
 	u.setVersion(2)
+	u.setVariant()
 	return
 }
 
