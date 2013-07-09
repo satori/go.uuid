@@ -56,7 +56,10 @@ func init() {
 	}
 	clockSequence = binary.BigEndian.Uint16(buf)
 
-	// Initialize hardwareAddr
+	// Initialize hardwareAddr randomly in case
+	// of real network interfaces absence
+	rand.Read(hardwareAddr[:])
+
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, iface := range interfaces {
