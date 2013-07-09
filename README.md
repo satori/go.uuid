@@ -1,6 +1,6 @@
 # UUID package for Go language
 
-This package provides implementation of Universally Unique Identifier (UUID)
+This package provides implementation of Universally Unique Identifier (UUID).
 
 Supported versions:
 * Version 1, based on timestamp and MAC address (RFC 4122)
