@@ -111,12 +111,12 @@ func (u *UUID) String() string {
 }
 
 // Sets version bits.
-func (u *UUID) setVersion(v byte) {
+func (u *UUID) SetVersion(v byte) {
 	u[6] = (u[6] & 0x0f) | (v << 4)
 }
 
 // Sets variant bits as described in RFC 4122.
-func (u *UUID) setVariant() {
+func (u *UUID) SetVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
@@ -145,8 +145,8 @@ func NewV1() (u *UUID, err error) {
 
 	copy(u[10:], hardwareAddr[:])
 
-	u.setVersion(1)
-	u.setVariant()
+	u.SetVersion(1)
+	u.SetVariant()
 	return
 }
 
@@ -171,19 +171,16 @@ func NewV2(domain byte) (u *UUID, err error) {
 	binary.BigEndian.PutUint16(u[8:], clockSequence)
 	u[9] = domain
 	copy(u[10:], hardwareAddr[:])
-	u.setVersion(2)
-	u.setVariant()
+	u.SetVersion(2)
+	u.SetVariant()
 	return
 }
 
 // Returns UUID based on MD5 hash of namespace UUID and name.
 func NewV3(ns *UUID, name string) (u *UUID, err error) {
 	u, err = newFromHash(md5.New(), ns, name)
-	if err != nil {
-		return
-	}
-	u.setVersion(3)
-	u.setVariant()
+	u.SetVersion(3)
+	u.SetVariant()
 	return
 }
 
@@ -191,22 +188,16 @@ func NewV3(ns *UUID, name string) (u *UUID, err error) {
 func NewV4() (u *UUID, err error) {
 	u = new(UUID)
 	_, err = rand.Read(u[:])
-	if err != nil {
-		return
-	}
-	u.setVersion(4)
-	u.setVariant()
+	u.SetVersion(4)
+	u.SetVariant()
 	return
 }
 
 // Returns UUID based on SHA-1 hash of namespace UUID and name.
 func NewV5(ns *UUID, name string) (u *UUID, err error) {
 	u, err = newFromHash(sha1.New(), ns, name)
-	if err != nil {
-		return
-	}
-	u.setVersion(5)
-	u.setVariant()
+	u.SetVersion(5)
+	u.SetVariant()
 	return
 }
 
