@@ -47,6 +47,9 @@ var (
 	posixGID      = uint32(os.Getgid())
 )
 
+// Epoch calculation function
+var epochFunc func() uint64
+
 // Initialize storage
 func init() {
 	buf := make([]byte, 2)
@@ -69,6 +72,22 @@ func init() {
 			}
 		}
 	}
+	epochFunc = unixTimeFunc
+}
+
+// Returns difference in 100-nanosecond intervals between
+// UUID epoch (October 15, 1582) and current time.
+// This is default epoch calculation function.
+func unixTimeFunc() uint64 {
+	return epochStart + uint64(time.Now().UnixNano() / 100)
+}
+
+// Sets epoch calculation function.
+// Returns old function.
+func SetEpochFunc(newEpochFunc func() uint64) (func() uint64) {
+	oldEpochFunc := epochFunc
+	epochFunc = newEpochFunc
+	return oldEpochFunc
 }
 
 // UUID representation compliant with specification
@@ -125,10 +144,10 @@ func (u *UUID) SetVariant() {
 
 // Returns UUID epoch timestamp
 func getTimestamp() uint64 {
-	timeNow := epochStart + uint64(time.Now().UnixNano()/100)
+	timeNow := epochStart + epochFunc()
 	// Clock changed backwards since last UUID generation.
 	// Should increase clock sequence.
-	if timeNow < lastTime {
+	if timeNow <= lastTime {
 		clockSequence++
 	}
 	lastTime = timeNow
