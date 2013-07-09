@@ -53,10 +53,7 @@ var epochFunc func() uint64
 // Initialize storage
 func init() {
 	buf := make([]byte, 2)
-	_, err := rand.Read(buf)
-	if err != nil {
-		panic("rand.Read failed during package initialization")
-	}
+	rand.Read(buf)
 	clockSequence = binary.BigEndian.Uint16(buf)
 
 	// Initialize hardwareAddr randomly in case

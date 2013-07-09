@@ -106,18 +106,38 @@ func TestNewV1(t *testing.T) {
 }
 
 func TestNewV2(t *testing.T) {
-	u, err := uuid.NewV2(uuid.DomainPerson)
+	u1, err := uuid.NewV2(uuid.DomainPerson)
 
 	if err != nil {
 		t.Errorf("UUIDv2 generated with error: %s", err.Error())
 	}
 
-	if u.Version() != 2 {
-		t.Errorf("UUIDv2 generated with incorrect version: %d", u.Version())
+	if u1.Version() != 2 {
+		t.Errorf("UUIDv2 generated with incorrect version: %d", u1.Version())
 	}
 
-	if u.Variant() != uuid.VariantRFC4122 {
-		t.Errorf("UUIDv2 generated with incorrect variant: %d", u.Variant())
+	if u1.Variant() != uuid.VariantRFC4122 {
+		t.Errorf("UUIDv2 generated with incorrect variant: %d", u1.Variant())
+	}
+
+	u2, err := uuid.NewV2(uuid.DomainGroup)
+
+	if err != nil {
+		t.Errorf("UUIDv2 generated with error: %s", err.Error())
+	}
+
+	if u2.Version() != 2 {
+		t.Errorf("UUIDv2 generated with incorrect version: %d", u2.Version())
+	}
+
+	if u2.Variant() != uuid.VariantRFC4122 {
+		t.Errorf("UUIDv2 generated with incorrect variant: %d", u2.Variant())
+	}
+
+	_, err = uuid.NewV2(uuid.DomainOrg)
+
+	if err == nil {
+		t.Errorf("UUIDv2 should be generated with error, otherwise error is: %s", err)
 	}
 }
 
