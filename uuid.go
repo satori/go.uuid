@@ -79,12 +79,14 @@ func unixTimeFunc() uint64 {
 	return epochStart + uint64(time.Now().UnixNano() / 100)
 }
 
+// Returns current epoch calculation function.
+func GetEpochFunc() (func() uint64) {
+	return epochFunc
+}
+
 // Sets epoch calculation function.
-// Returns old function.
-func SetEpochFunc(newEpochFunc func() uint64) (func() uint64) {
-	oldEpochFunc := epochFunc
+func SetEpochFunc(newEpochFunc func() uint64) {
 	epochFunc = newEpochFunc
-	return oldEpochFunc
 }
 
 // UUID representation compliant with specification
