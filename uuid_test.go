@@ -137,10 +137,14 @@ func TestNewV2(t *testing.T) {
 		t.Errorf("UUIDv2 generated with incorrect variant: %d", u2.Variant())
 	}
 
-	_, err = uuid.NewV2(uuid.DomainOrg)
+	u3, err := uuid.NewV2(uuid.DomainOrg)
 
 	if err == nil {
 		t.Errorf("UUIDv2 should be generated with error, otherwise error is: %s", err)
+	}
+
+	if u3 != nil {
+		t.Errorf("UUIDv2 should be nil in case of error, otherwise: %s", u3)
 	}
 }
 

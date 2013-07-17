@@ -154,8 +154,8 @@ func getTimestamp() uint64 {
 }
 
 // Returns UUID based on current timestamp and MAC address.
-func NewV1() (u *UUID, err error) {
-	u = new(UUID)
+func NewV1() (*UUID, error) {
+	u := new(UUID)
 
 	timeNow := getTimestamp()
 
@@ -168,12 +168,13 @@ func NewV1() (u *UUID, err error) {
 
 	u.SetVersion(1)
 	u.SetVariant()
-	return
+
+	return u, nil
 }
 
 // Returns DCE Security UUID based on POSIX UID/GID.
-func NewV2(domain byte) (u *UUID, err error) {
-	u = new(UUID)
+func NewV2(domain byte) (*UUID, error) {
+	u := new(UUID)
 
 	switch domain {
 	case DomainPerson:
@@ -181,8 +182,7 @@ func NewV2(domain byte) (u *UUID, err error) {
 	case DomainGroup:
 		binary.BigEndian.PutUint32(u[0:], posixGID)
 	default:
-		err = errors.New("Unsupported domain")
-		return
+		return nil, errors.New("Unsupported domain")
 	}
 
 	timeNow := getTimestamp()
@@ -194,39 +194,47 @@ func NewV2(domain byte) (u *UUID, err error) {
 	copy(u[10:], hardwareAddr[:])
 	u.SetVersion(2)
 	u.SetVariant()
-	return
+
+	return u, nil
 }
 
 // Returns UUID based on MD5 hash of namespace UUID and name.
-func NewV3(ns *UUID, name string) (u *UUID, err error) {
-	u, err = newFromHash(md5.New(), ns, name)
+func NewV3(ns *UUID, name string) (*UUID, error) {
+	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(3)
 	u.SetVariant()
-	return
+
+	return u, nil
 }
 
 // Returns random generated UUID.
-func NewV4() (u *UUID, err error) {
-	u = new(UUID)
-	_, err = rand.Read(u[:])
+func NewV4() (*UUID, error) {
+	u := new(UUID)
+	_, err := rand.Read(u[:])
+	if err != nil {
+		return nil, err
+	}
 	u.SetVersion(4)
 	u.SetVariant()
-	return
+
+	return u, nil
 }
 
 // Returns UUID based on SHA-1 hash of namespace UUID and name.
-func NewV5(ns *UUID, name string) (u *UUID, err error) {
-	u, err = newFromHash(sha1.New(), ns, name)
+func NewV5(ns *UUID, name string) (*UUID, error) {
+	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(5)
 	u.SetVariant()
-	return
+
+	return u, nil
 }
 
 // Returns UUID based on hashing of namespace UUID and name.
-func newFromHash(h hash.Hash, ns *UUID, name string) (u *UUID, err error) {
-	u = new(UUID)
+func newFromHash(h hash.Hash, ns *UUID, name string) *UUID {
+	u := new(UUID)
 	h.Write(ns[:])
 	h.Write([]byte(name))
 	copy(u[:], h.Sum(nil))
-	return
+
+	return u
 }
