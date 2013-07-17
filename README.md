@@ -1,5 +1,7 @@
 # UUID package for Go language
 
+[![Build Status](https://secure.travis-ci.org/satori/uuid.png)](http://travis-ci.org/satori/uuid)
+
 This package provides implementation of Universally Unique Identifier (UUID).
 
 Supported versions:
