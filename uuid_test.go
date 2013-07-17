@@ -97,7 +97,7 @@ func TestNewV1(t *testing.T) {
 
 	oldFunc := uuid.GetEpochFunc()
 
-	uuid.SetEpochFunc(func() uint64 { return 0})
+	uuid.SetEpochFunc(func() uint64 { return 0 })
 	u3, _ := uuid.NewV1()
 	u4, _ := uuid.NewV1()
 
