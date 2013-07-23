@@ -11,7 +11,6 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"hash"
 	"net"
@@ -154,7 +153,7 @@ func getTimestamp() uint64 {
 }
 
 // Returns UUID based on current timestamp and MAC address.
-func NewV1() (*UUID, error) {
+func NewV1() *UUID {
 	u := new(UUID)
 
 	timeNow := getTimestamp()
@@ -169,11 +168,11 @@ func NewV1() (*UUID, error) {
 	u.SetVersion(1)
 	u.SetVariant()
 
-	return u, nil
+	return u
 }
 
 // Returns DCE Security UUID based on POSIX UID/GID.
-func NewV2(domain byte) (*UUID, error) {
+func NewV2(domain byte) *UUID {
 	u := new(UUID)
 
 	switch domain {
@@ -181,8 +180,6 @@ func NewV2(domain byte) (*UUID, error) {
 		binary.BigEndian.PutUint32(u[0:], posixUID)
 	case DomainGroup:
 		binary.BigEndian.PutUint32(u[0:], posixGID)
-	default:
-		return nil, errors.New("Unsupported domain")
 	}
 
 	timeNow := getTimestamp()
@@ -195,38 +192,35 @@ func NewV2(domain byte) (*UUID, error) {
 	u.SetVersion(2)
 	u.SetVariant()
 
-	return u, nil
+	return u
 }
 
 // Returns UUID based on MD5 hash of namespace UUID and name.
-func NewV3(ns *UUID, name string) (*UUID, error) {
+func NewV3(ns *UUID, name string) *UUID {
 	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(3)
 	u.SetVariant()
 
-	return u, nil
+	return u
 }
 
 // Returns random generated UUID.
-func NewV4() (*UUID, error) {
+func NewV4() *UUID {
 	u := new(UUID)
-	_, err := rand.Read(u[:])
-	if err != nil {
-		return nil, err
-	}
+	rand.Read(u[:])
 	u.SetVersion(4)
 	u.SetVariant()
 
-	return u, nil
+	return u
 }
 
 // Returns UUID based on SHA-1 hash of namespace UUID and name.
-func NewV5(ns *UUID, name string) (*UUID, error) {
+func NewV5(ns *UUID, name string) *UUID {
 	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(5)
 	u.SetVariant()
 
-	return u, nil
+	return u
 }
 
 // Returns UUID based on hashing of namespace UUID and name.
