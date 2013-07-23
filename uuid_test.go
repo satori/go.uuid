@@ -1,28 +1,27 @@
-package uuid_test
+package uuid
 
 import (
-	"github.com/satori/uuid"
 	"testing"
 )
 
 func TestString(t *testing.T) {
-	if uuid.NamespaceDNS.String() != "6ba7b810-9dad-11d1-80b4-00c04fd430c8" {
-		t.Errorf("Incorrect string representation for UUID: %s", uuid.NamespaceDNS.String())
+	if NamespaceDNS.String() != "6ba7b810-9dad-11d1-80b4-00c04fd430c8" {
+		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.String())
 	}
 }
 
 func TestEqual(t *testing.T) {
-	if !uuid.Equal(uuid.NamespaceDNS, uuid.NamespaceDNS) {
-		t.Errorf("Incorrect comparison of %s and %s", uuid.NamespaceDNS, uuid.NamespaceDNS)
+	if !Equal(NamespaceDNS, NamespaceDNS) {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
 	}
 
-	if uuid.Equal(uuid.NamespaceDNS, uuid.NamespaceURL) {
-		t.Errorf("Incorrect comparison of %s and %s", uuid.NamespaceDNS, uuid.NamespaceURL)
+	if Equal(NamespaceDNS, NamespaceURL) {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceURL)
 	}
 }
 
 func TestVersion(t *testing.T) {
-	u := uuid.UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	u := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
 	if u.Version() != 1 {
 		t.Errorf("Incorrect version for UUID: %d", u.Version())
@@ -30,7 +29,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestSetVersion(t *testing.T) {
-	u := new(uuid.UUID)
+	u := new(UUID)
 	u.SetVersion(4)
 
 	if u.Version() != 4 {
@@ -39,42 +38,42 @@ func TestSetVersion(t *testing.T) {
 }
 
 func TestVariant(t *testing.T) {
-	u1 := uuid.UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	u1 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	if u1.Variant() != uuid.VariantNCS {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", uuid.VariantNCS, u1.Variant())
+	if u1.Variant() != VariantNCS {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantNCS, u1.Variant())
 	}
 
-	u2 := uuid.UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	u2 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	if u2.Variant() != uuid.VariantRFC4122 {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", uuid.VariantRFC4122, u2.Variant())
+	if u2.Variant() != VariantRFC4122 {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantRFC4122, u2.Variant())
 	}
 
-	u3 := uuid.UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	u3 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	if u3.Variant() != uuid.VariantMicrosoft {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", uuid.VariantMicrosoft, u3.Variant())
+	if u3.Variant() != VariantMicrosoft {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantMicrosoft, u3.Variant())
 	}
 
-	u4 := uuid.UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	u4 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
 
-	if u4.Variant() != uuid.VariantFuture {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", uuid.VariantFuture, u4.Variant())
+	if u4.Variant() != VariantFuture {
+		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantFuture, u4.Variant())
 	}
 }
 
 func TestSetVariant(t *testing.T) {
-	u := new(uuid.UUID)
+	u := new(UUID)
 	u.SetVariant()
 
-	if u.Variant() != uuid.VariantRFC4122 {
+	if u.Variant() != VariantRFC4122 {
 		t.Errorf("Incorrect variant for UUID after u.setVariant(): %d", u.Variant())
 	}
 }
 
 func TestNewV1(t *testing.T) {
-	u, err := uuid.NewV1()
+	u, err := NewV1()
 
 	if err != nil {
 		t.Errorf("UUIDv1 generated with error: %s", err.Error())
@@ -84,32 +83,32 @@ func TestNewV1(t *testing.T) {
 		t.Errorf("UUIDv1 generated with incorrect version: %d", u.Version())
 	}
 
-	if u.Variant() != uuid.VariantRFC4122 {
+	if u.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv1 generated with incorrect variant: %d", u.Variant())
 	}
 
-	u1, _ := uuid.NewV1()
-	u2, _ := uuid.NewV1()
+	u1, _ := NewV1()
+	u2, _ := NewV1()
 
-	if uuid.Equal(u1, u2) {
+	if Equal(u1, u2) {
 		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u1, u2)
 	}
 
-	oldFunc := uuid.GetEpochFunc()
+	oldFunc := GetEpochFunc()
 
-	uuid.SetEpochFunc(func() uint64 { return 0 })
-	u3, _ := uuid.NewV1()
-	u4, _ := uuid.NewV1()
+	SetEpochFunc(func() uint64 { return 0 })
+	u3, _ := NewV1()
+	u4, _ := NewV1()
 
-	if uuid.Equal(u3, u4) {
+	if Equal(u3, u4) {
 		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u3, u4)
 	}
 
-	uuid.SetEpochFunc(oldFunc)
+	SetEpochFunc(oldFunc)
 }
 
 func TestNewV2(t *testing.T) {
-	u1, err := uuid.NewV2(uuid.DomainPerson)
+	u1, err := NewV2(DomainPerson)
 
 	if err != nil {
 		t.Errorf("UUIDv2 generated with error: %s", err.Error())
@@ -119,11 +118,11 @@ func TestNewV2(t *testing.T) {
 		t.Errorf("UUIDv2 generated with incorrect version: %d", u1.Version())
 	}
 
-	if u1.Variant() != uuid.VariantRFC4122 {
+	if u1.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv2 generated with incorrect variant: %d", u1.Variant())
 	}
 
-	u2, err := uuid.NewV2(uuid.DomainGroup)
+	u2, err := NewV2(DomainGroup)
 
 	if err != nil {
 		t.Errorf("UUIDv2 generated with error: %s", err.Error())
@@ -133,11 +132,11 @@ func TestNewV2(t *testing.T) {
 		t.Errorf("UUIDv2 generated with incorrect version: %d", u2.Version())
 	}
 
-	if u2.Variant() != uuid.VariantRFC4122 {
+	if u2.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv2 generated with incorrect variant: %d", u2.Variant())
 	}
 
-	u3, err := uuid.NewV2(uuid.DomainOrg)
+	u3, err := NewV2(DomainOrg)
 
 	if err == nil {
 		t.Errorf("UUIDv2 should be generated with error, otherwise error is: %s", err)
@@ -149,7 +148,7 @@ func TestNewV2(t *testing.T) {
 }
 
 func TestNewV3(t *testing.T) {
-	u, err := uuid.NewV3(uuid.NamespaceDNS, "www.example.com")
+	u, err := NewV3(NamespaceDNS, "www.example.com")
 
 	if err != nil {
 		t.Errorf("UUIDv3 generated with error: %s", err.Error())
@@ -159,7 +158,7 @@ func TestNewV3(t *testing.T) {
 		t.Errorf("UUIDv3 generated with incorrect version: %d", u.Version())
 	}
 
-	if u.Variant() != uuid.VariantRFC4122 {
+	if u.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv3 generated with incorrect variant: %d", u.Variant())
 	}
 
@@ -167,31 +166,31 @@ func TestNewV3(t *testing.T) {
 		t.Errorf("UUIDv3 generated incorrectly: %s", u.String())
 	}
 
-	u, _ = uuid.NewV3(uuid.NamespaceDNS, "python.org")
+	u, _ = NewV3(NamespaceDNS, "python.org")
 
 	if u.String() != "6fa459ea-ee8a-3ca4-894e-db77e160355e" {
 		t.Errorf("UUIDv3 generated incorrectly: %s", u.String())
 	}
 
-	u1, _ := uuid.NewV3(uuid.NamespaceDNS, "golang.org")
-	u2, _ := uuid.NewV3(uuid.NamespaceDNS, "golang.org")
-	if !uuid.Equal(u1, u2) {
+	u1, _ := NewV3(NamespaceDNS, "golang.org")
+	u2, _ := NewV3(NamespaceDNS, "golang.org")
+	if !Equal(u1, u2) {
 		t.Errorf("UUIDv3 generated different UUIDs for same namespace and name: %s and %s", u1, u2)
 	}
 
-	u3, _ := uuid.NewV3(uuid.NamespaceDNS, "example.com")
-	if uuid.Equal(u1, u3) {
+	u3, _ := NewV3(NamespaceDNS, "example.com")
+	if Equal(u1, u3) {
 		t.Errorf("UUIDv3 generated same UUIDs for different names in same namespace: %s and %s", u1, u2)
 	}
 
-	u4, _ := uuid.NewV3(uuid.NamespaceURL, "golang.org")
-	if uuid.Equal(u1, u4) {
+	u4, _ := NewV3(NamespaceURL, "golang.org")
+	if Equal(u1, u4) {
 		t.Errorf("UUIDv3 generated same UUIDs for sane names in different namespaces: %s and %s", u1, u4)
 	}
 }
 
 func TestNewV4(t *testing.T) {
-	u, err := uuid.NewV4()
+	u, err := NewV4()
 
 	if err != nil {
 		t.Errorf("UUIDv4 generated with error: %s", err.Error())
@@ -202,13 +201,13 @@ func TestNewV4(t *testing.T) {
 		t.Errorf("UUIDv4 generated with incorrect version: %d", u.Version())
 	}
 
-	if u.Variant() != uuid.VariantRFC4122 {
+	if u.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv4 generated with incorrect variant: %d", u.Variant())
 	}
 }
 
 func TestNewV5(t *testing.T) {
-	u, err := uuid.NewV5(uuid.NamespaceDNS, "www.example.com")
+	u, err := NewV5(NamespaceDNS, "www.example.com")
 
 	if err != nil {
 		t.Errorf("UUIDv5 generated with error: %s", err.Error())
@@ -218,29 +217,29 @@ func TestNewV5(t *testing.T) {
 		t.Errorf("UUIDv5 generated with incorrect version: %d", u.Version())
 	}
 
-	if u.Variant() != uuid.VariantRFC4122 {
+	if u.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv5 generated with incorrect variant: %d", u.Variant())
 	}
 
-	u, _ = uuid.NewV5(uuid.NamespaceDNS, "python.org")
+	u, _ = NewV5(NamespaceDNS, "python.org")
 
 	if u.String() != "886313e1-3b8a-5372-9b90-0c9aee199e5d" {
 		t.Errorf("UUIDv5 generated incorrectly: %s", u.String())
 	}
 
-	u1, _ := uuid.NewV5(uuid.NamespaceDNS, "golang.org")
-	u2, _ := uuid.NewV5(uuid.NamespaceDNS, "golang.org")
-	if !uuid.Equal(u1, u2) {
+	u1, _ := NewV5(NamespaceDNS, "golang.org")
+	u2, _ := NewV5(NamespaceDNS, "golang.org")
+	if !Equal(u1, u2) {
 		t.Errorf("UUIDv5 generated different UUIDs for same namespace and name: %s and %s", u1, u2)
 	}
 
-	u3, _ := uuid.NewV5(uuid.NamespaceDNS, "example.com")
-	if uuid.Equal(u1, u3) {
+	u3, _ := NewV5(NamespaceDNS, "example.com")
+	if Equal(u1, u3) {
 		t.Errorf("UUIDv5 generated same UUIDs for different names in same namespace: %s and %s", u1, u2)
 	}
 
-	u4, _ := uuid.NewV5(uuid.NamespaceURL, "golang.org")
-	if uuid.Equal(u1, u4) {
+	u4, _ := NewV5(NamespaceURL, "golang.org")
+	if Equal(u1, u4) {
 		t.Errorf("UUIDv3 generated same UUIDs for sane names in different namespaces: %s and %s", u1, u4)
 	}
 }
