@@ -113,24 +113,24 @@ type UUID [16]byte
 
 // Predefined namespace UUIDs.
 var (
-	NamespaceDNS  = &UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-	NamespaceURL  = &UUID{0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-	NamespaceOID  = &UUID{0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-	NamespaceX500 = &UUID{0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceDNS  = UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceURL  = UUID{0x6b, 0xa7, 0xb8, 0x11, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceOID  = UUID{0x6b, 0xa7, 0xb8, 0x12, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	NamespaceX500 = UUID{0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 )
 
 // Returns true if u1 and u2 equals, otherwise returns false.
-func Equal(u1 *UUID, u2 *UUID) bool {
+func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
 }
 
 // Returns algorithm version used to generate UUID.
-func (u *UUID) Version() uint {
+func (u UUID) Version() uint {
 	return uint(u[6] >> 4)
 }
 
 // Returns UUID layout variant.
-func (u *UUID) Variant() uint {
+func (u UUID) Variant() uint {
 	switch {
 	case (u[8] & 0x80) == 0x00:
 		return VariantNCS
@@ -144,7 +144,7 @@ func (u *UUID) Variant() uint {
 
 // Returns canonical string representation of UUID:
 // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
-func (u *UUID) String() string {
+func (u UUID) String() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x",
 		u[:4], u[4:6], u[6:8], u[8:10], u[10:])
 }
@@ -172,8 +172,8 @@ func getTimestamp() uint64 {
 }
 
 // Returns UUID based on current timestamp and MAC address.
-func NewV1() *UUID {
-	u := new(UUID)
+func NewV1() UUID {
+	u := UUID{}
 
 	timeNow := getTimestamp()
 
@@ -191,8 +191,8 @@ func NewV1() *UUID {
 }
 
 // Returns DCE Security UUID based on POSIX UID/GID.
-func NewV2(domain byte) *UUID {
-	u := new(UUID)
+func NewV2(domain byte) UUID {
+	u := UUID{}
 
 	switch domain {
 	case DomainPerson:
@@ -215,7 +215,7 @@ func NewV2(domain byte) *UUID {
 }
 
 // Returns UUID based on MD5 hash of namespace UUID and name.
-func NewV3(ns *UUID, name string) *UUID {
+func NewV3(ns UUID, name string) UUID {
 	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(3)
 	u.SetVariant()
@@ -224,8 +224,8 @@ func NewV3(ns *UUID, name string) *UUID {
 }
 
 // Returns random generated UUID.
-func NewV4() *UUID {
-	u := new(UUID)
+func NewV4() UUID {
+	u := UUID{}
 	rand.Read(u[:])
 	u.SetVersion(4)
 	u.SetVariant()
@@ -234,7 +234,7 @@ func NewV4() *UUID {
 }
 
 // Returns UUID based on SHA-1 hash of namespace UUID and name.
-func NewV5(ns *UUID, name string) *UUID {
+func NewV5(ns UUID, name string) UUID {
 	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(5)
 	u.SetVariant()
@@ -243,8 +243,8 @@ func NewV5(ns *UUID, name string) *UUID {
 }
 
 // Returns UUID based on hashing of namespace UUID and name.
-func newFromHash(h hash.Hash, ns *UUID, name string) *UUID {
-	u := new(UUID)
+func newFromHash(h hash.Hash, ns UUID, name string) UUID {
+	u := UUID{}
 	h.Write(ns[:])
 	h.Write([]byte(name))
 	copy(u[:], h.Sum(nil))
