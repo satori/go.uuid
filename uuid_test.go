@@ -111,9 +111,9 @@ func TestNewV1(t *testing.T) {
 		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u1, u2)
 	}
 
-	oldFunc := GetEpochFunc()
+	oldFunc := epochFunc
+	epochFunc = func() uint64 { return 0 }
 
-	SetEpochFunc(func() uint64 { return 0 })
 	u3 := NewV1()
 	u4 := NewV1()
 
@@ -121,7 +121,7 @@ func TestNewV1(t *testing.T) {
 		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u3, u4)
 	}
 
-	SetEpochFunc(oldFunc)
+	epochFunc = oldFunc
 }
 
 func TestNewV2(t *testing.T) {
