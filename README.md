@@ -1,6 +1,6 @@
 # UUID package for Go language
 
-[![Build Status](https://travis-ci.org/satori/uuid.png)](http://travis-ci.org/satori/uuid)
+[![Build Status](https://travis-ci.org/go-contrib/uuid.png)](http://travis-ci.org/go-contrib/uuid)
 
 This package provides implementation of Universally Unique Identifier (UUID).
 
@@ -19,7 +19,7 @@ Use the `go` command:
 
 ## Documentation
 
-[Documentation](http://godoc.org/github.com/satori/uuid) is hosted at GoDoc project.
+[Documentation](http://godoc.org/github.com/go-contrib/uuid) is hosted at GoDoc project.
 
 ## Links
 * [RFC 4122](http://tools.ietf.org/html/rfc4122)
@@ -29,4 +29,4 @@ Use the `go` command:
 
 Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>.
 
-UUID package released under MIT License. See [LICENSE](https://github.com/satori/uuid/blob/master/LICENSE) for details.
+UUID package released under MIT License. See [LICENSE](https://github.com/go-contrib/uuid/blob/master/LICENSE) for details.
