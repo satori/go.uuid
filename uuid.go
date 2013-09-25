@@ -169,7 +169,7 @@ func (u *UUID) SetVariant() {
 
 // Returns UUID epoch timestamp
 func getTimestamp() uint64 {
-	timeNow := epochStart + epochFunc()
+	timeNow := epochFunc()
 	// Clock changed backwards since last UUID generation.
 	// Should increase clock sequence.
 	if timeNow <= lastTime {
