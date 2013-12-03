@@ -1,7 +1,7 @@
 # UUID package for Go language
 
-[![Build Status](https://travis-ci.org/satori/uuid.go.png?branch=master)](https://travis-ci.org/satori/uuid.go)
-[![GoDoc](http://godoc.org/github.com/satori/uuid.go?status.png)](http://godoc.org/github.com/satori/uuid.go)
+[![Build Status](https://travis-ci.org/satori/go.uuid.png?branch=master)](https://travis-ci.org/satori/uuid.go)
+[![GoDoc](http://godoc.org/github.com/satori/go.uuid?status.png)](http://godoc.org/github.com/satori/uuid.go)
 
 This package provides implementation of Universally Unique Identifier (UUID).
 
@@ -16,7 +16,7 @@ Supported versions:
 
 Use the `go` command:
 
-	$ go get github.com/satori/uuid.go
+	$ go get github.com/satori/go.uuid
 
 ## Requirements
 
@@ -31,7 +31,7 @@ package main
 
 import (
   "fmt"
-  "github.com/satori/uuid.go"
+  "github.com/satori/go.uuid"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 
 ## Documentation
 
-[Documentation](http://godoc.org/github.com/satori/uuid.go) is hosted at GoDoc project.
+[Documentation](http://godoc.org/github.com/satori/go.uuid) is hosted at GoDoc project.
 
 ## Links
 * [RFC 4122](http://tools.ietf.org/html/rfc4122)
@@ -54,4 +54,4 @@ func main() {
 Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>.
 
 UUID package released under MIT License.
-See [LICENSE](https://github.com/satori/uuid.go/blob/master/LICENSE) for details.
+See [LICENSE](https://github.com/satori/go.uuid/blob/master/LICENSE) for details.
