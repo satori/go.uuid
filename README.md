@@ -5,6 +5,8 @@
 
 This package provides implementation of Universally Unique Identifier (UUID).
 
+With 100% test coverage out of box.
+
 Supported versions:
 * Version 1, based on timestamp and MAC address (RFC 4122)
 * Version 2, based on timestamp, MAC address and POSIX UID/GID (DCE 1.1)
