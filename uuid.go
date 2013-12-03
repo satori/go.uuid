@@ -19,7 +19,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// This package provides implementation of Universally Unique Identifier (UUID).
+// Package uuid provides implementation of Universally Unique Identifier (UUID).
 // Supported versions are 1, 3, 4 and 5 (as specified in RFC 4122) and
 // version 2 (as specified in DCE 1.1).
 package uuid
@@ -109,7 +109,7 @@ var (
 	NamespaceX500 = UUID{0x6b, 0xa7, 0xb8, 0x14, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 )
 
-// Returns result of binary AND of two UUIDs.
+// And returns result of binary AND of two UUIDs.
 func And(u1 UUID, u2 UUID) UUID {
 	u := UUID{}
 	for i := 0; i < 16; i++ {
@@ -118,7 +118,7 @@ func And(u1 UUID, u2 UUID) UUID {
 	return u
 }
 
-// Returns result of binary OR of two UUIDs.
+// Or returns result of binary OR of two UUIDs.
 func Or(u1 UUID, u2 UUID) UUID {
 	u := UUID{}
 	for i := 0; i < 16; i++ {
@@ -127,17 +127,17 @@ func Or(u1 UUID, u2 UUID) UUID {
 	return u
 }
 
-// Returns true if u1 and u2 equals, otherwise returns false.
+// Equal returns true if u1 and u2 equals, otherwise returns false.
 func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
 }
 
-// Returns algorithm version used to generate UUID.
+// Version returns algorithm version used to generate UUID.
 func (u UUID) Version() uint {
 	return uint(u[6] >> 4)
 }
 
-// Returns UUID layout variant.
+// Variant returns UUID layout variant.
 func (u UUID) Variant() uint {
 	switch {
 	case (u[8] & 0x80) == 0x00:
@@ -157,12 +157,12 @@ func (u UUID) String() string {
 		u[:4], u[4:6], u[6:8], u[8:10], u[10:])
 }
 
-// Sets version bits.
+// SetVersion sets version bits.
 func (u *UUID) SetVersion(v byte) {
 	u[6] = (u[6] & 0x0f) | (v << 4)
 }
 
-// Sets variant bits as described in RFC 4122.
+// SetVariant sets variant bits as described in RFC 4122.
 func (u *UUID) SetVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
@@ -179,7 +179,7 @@ func getTimestamp() uint64 {
 	return timeNow
 }
 
-// Returns UUID based on current timestamp and MAC address.
+// NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
 	u := UUID{}
 
@@ -198,7 +198,7 @@ func NewV1() UUID {
 	return u
 }
 
-// Returns DCE Security UUID based on POSIX UID/GID.
+// NewV2 returns DCE Security UUID based on POSIX UID/GID.
 func NewV2(domain byte) UUID {
 	u := UUID{}
 
@@ -222,7 +222,7 @@ func NewV2(domain byte) UUID {
 	return u
 }
 
-// Returns UUID based on MD5 hash of namespace UUID and name.
+// NewV3 returns UUID based on MD5 hash of namespace UUID and name.
 func NewV3(ns UUID, name string) UUID {
 	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(3)
@@ -231,7 +231,7 @@ func NewV3(ns UUID, name string) UUID {
 	return u
 }
 
-// Returns random generated UUID.
+// NewV4 returns random generated UUID.
 func NewV4() UUID {
 	u := UUID{}
 	rand.Read(u[:])
@@ -241,7 +241,7 @@ func NewV4() UUID {
 	return u
 }
 
-// Returns UUID based on SHA-1 hash of namespace UUID and name.
+// NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
 func NewV5(ns UUID, name string) UUID {
 	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(5)
