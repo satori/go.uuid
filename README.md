@@ -17,6 +17,28 @@ Use the `go` command:
 
 	$ go get github.com/satori/uuid.go
 
+## Requirements
+
+UUID package requires any stable version of Go Programming Language.
+It is tested against following versions of Go: 1.0, 1.1, 1.2
+
+## Example
+
+```go
+package main
+
+import (
+  "fmt"
+  "github.com/satori/uuid.go"
+)
+
+func main() {
+  // Creating UUID Version 4
+  u := uuid.NewV4()
+  fmt.Printf("UUIDv4: %s", u)
+}
+```
+
 ## Documentation
 
 [Documentation](http://godoc.org/github.com/satori/uuid.go) is hosted at GoDoc project.
@@ -29,4 +51,5 @@ Use the `go` command:
 
 Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>.
 
-UUID package released under MIT License. See [LICENSE](https://github.com/satori/uuid.go/blob/master/LICENSE) for details.
+UUID package released under MIT License.
+See [LICENSE](https://github.com/satori/uuid.go/blob/master/LICENSE) for details.
