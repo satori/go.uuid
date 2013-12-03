@@ -1,4 +1,7 @@
 language: go
-go: 1.1
+go:
+    - 1.0
+    - 1.1
+    - 1.2
 notifications:
     email: false
