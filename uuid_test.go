@@ -50,7 +50,7 @@ func TestVersion(t *testing.T) {
 }
 
 func TestSetVersion(t *testing.T) {
-	u := new(UUID)
+	u := UUID{}
 	u.SetVersion(4)
 
 	if u.Version() != 4 {
