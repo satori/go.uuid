@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/satori/go.uuid.png?branch=master)](https://travis-ci.org/satori/go.uuid)
 [![GoDoc](http://godoc.org/github.com/satori/go.uuid?status.png)](http://godoc.org/github.com/satori/go.uuid)
 
-This package provides implementation of Universally Unique Identifier (UUID).
+This package provides pure Go implementation of Universally Unique Identifier (UUID). Supported both creation and parsing of UUIDs.
 
 With 100% test coverage and benchmarks out of box.
 
@@ -38,8 +38,14 @@ import (
 
 func main() {
   // Creating UUID Version 4
-  u := uuid.NewV4()
-  fmt.Printf("UUIDv4: %s\n", u)
+  u1 := uuid.NewV4()
+  fmt.Printf("UUIDv4: %s\n", u1)
+
+  u2, err := uuid.FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+  if err != nil {
+    fmt.Printf("Something gone wrong: %s", err)
+  }
+  fmt.Printf("Successfully parsed: %s", u2)
 }
 ```
 
