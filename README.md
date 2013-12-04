@@ -5,7 +5,7 @@
 
 This package provides implementation of Universally Unique Identifier (UUID).
 
-With 100% test coverage out of box.
+With 100% test coverage and benchmarks out of box.
 
 Supported versions:
 * Version 1, based on timestamp and MAC address (RFC 4122)
@@ -39,7 +39,7 @@ import (
 func main() {
   // Creating UUID Version 4
   u := uuid.NewV4()
-  fmt.Printf("UUIDv4: %s", u)
+  fmt.Printf("UUIDv4: %s\n", u)
 }
 ```
 
