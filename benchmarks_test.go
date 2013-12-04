@@ -25,6 +25,13 @@ import (
 	"testing"
 )
 
+func BenchmarkFromBytes(b *testing.B) {
+	bytes := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	for i := 0; i < b.N; i++ {
+		FromBytes(bytes)
+	}
+}
+
 func BenchmarkNewV1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewV1()

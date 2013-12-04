@@ -179,6 +179,19 @@ func getTimestamp() uint64 {
 	return timeNow
 }
 
+// FromBytes returns UUID converted from raw byte slice input.
+// It will return error if the slice isn't 16 bytes long.
+func FromBytes(input []byte) (u UUID, err error) {
+	if len(input) != 16 {
+		err = fmt.Errorf("UUID must be exactly 16 bytes long, got %d bytes", len(input))
+		return
+	}
+
+	copy(u[:], input)
+
+	return
+}
+
 // NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
 	u := UUID{}

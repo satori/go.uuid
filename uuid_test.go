@@ -115,6 +115,28 @@ func TestSetVariant(t *testing.T) {
 	}
 }
 
+func TestFromBytes(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	bytes1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	u1, err := FromBytes(bytes1)
+	if err != nil {
+		t.Errorf("Error parsing UUID from bytes: %s", err)
+	}
+
+	if !Equal(u, u1) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
+	}
+
+	bytes2 := []byte{}
+
+	_, err = FromBytes(bytes2)
+	if err == nil {
+		t.Errorf("Should return error parsing from empty byte slice, got %s", err)
+	}
+}
+
 func TestNewV1(t *testing.T) {
 	u := NewV1()
 
