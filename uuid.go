@@ -185,7 +185,7 @@ func getTimestamp() uint64 {
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
 	if len(input) != 16 {
-		err = fmt.Errorf("UUID must be exactly 16 bytes long, got %d bytes", len(input))
+		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(input))
 		return
 	}
 
@@ -209,7 +209,7 @@ func FromString(input string) (u UUID, err error) {
 	}
 
 	if len(s) != 32 {
-		err = fmt.Errorf("Invalid UUID string: %s", input)
+		err = fmt.Errorf("uuid: invalid UUID string: %s", input)
 		return
 	}
 
