@@ -30,10 +30,12 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"hash"
 	"net"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -192,6 +194,31 @@ func FromBytes(input []byte) (u UUID, err error) {
 	return
 }
 
+// FromString returns UUID parsed from string input.
+// Following formats are supported:
+// "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+func FromString(input string) (u UUID, err error) {
+	s := strings.Replace(input, "-", "", -1)
+
+	if len(s) == 41 && s[:9] == "urn:uuid:" {
+		s = s[9:]
+	} else if len(s) == 34 && s[0] == '{' && s[33] == '}' {
+		s = s[1:33]
+	}
+
+	if len(s) != 32 {
+		err = fmt.Errorf("Invalid UUID string: %s", input)
+		return
+	}
+
+	b := []byte(s)
+	_, err = hex.Decode(u[:], b)
+
+	return
+}
+
 // NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
 	u := UUID{}
@@ -228,7 +255,9 @@ func NewV2(domain byte) UUID {
 	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
 	binary.BigEndian.PutUint16(u[8:], clockSequence)
 	u[9] = domain
+
 	copy(u[10:], hardwareAddr[:])
+
 	u.SetVersion(2)
 	u.SetVariant()
 

@@ -32,6 +32,27 @@ func BenchmarkFromBytes(b *testing.B) {
 	}
 }
 
+func BenchmarkFromString(b *testing.B) {
+	s := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	for i := 0; i < b.N; i++ {
+		FromString(s)
+	}
+}
+
+func BenchmarkFromStringUrn(b *testing.B) {
+	s := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	for i := 0; i < b.N; i++ {
+		FromString(s)
+	}
+}
+
+func BenchmarkFromStringWithBrackets(b *testing.B) {
+	s := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
+	for i := 0; i < b.N; i++ {
+		FromString(s)
+	}
+}
+
 func BenchmarkNewV1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewV1()

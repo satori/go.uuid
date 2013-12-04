@@ -137,6 +137,46 @@ func TestFromBytes(t *testing.T) {
 	}
 }
 
+func TestFromString(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	s2 := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
+	s3 := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+
+	_, err := FromString("")
+	if err == nil {
+		t.Errorf("Should return error trying to parse empty string, got %s", err)
+	}
+
+	u1, err := FromString(s1)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u1) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
+	}
+
+	u2, err := FromString(s2)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u2) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u2)
+	}
+
+	u3, err := FromString(s3)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u3) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u3)
+	}
+}
+
 func TestNewV1(t *testing.T) {
 	u := NewV1()
 
