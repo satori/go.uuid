@@ -36,7 +36,6 @@ func TestBytes(t *testing.T) {
 	}
 }
 
-
 func TestString(t *testing.T) {
 	if NamespaceDNS.String() != "6ba7b810-9dad-11d1-80b4-00c04fd430c8" {
 		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.String())
