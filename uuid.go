@@ -80,6 +80,9 @@ func init() {
 	// of real network interfaces absence
 	rand.Read(hardwareAddr[:])
 
+	// Set multicast bit as recommended in RFC 4122
+	hardwareAddr[0] |= 0x01
+
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, iface := range interfaces {
