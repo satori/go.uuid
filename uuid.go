@@ -152,6 +152,11 @@ func (u UUID) Variant() uint {
 	return VariantFuture
 }
 
+// Bytes returns bytes slice representation of UUID.
+func (u UUID) Bytes() []byte {
+	return u[:]
+}
+
 // Returns canonical string representation of UUID:
 // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
 func (u UUID) String() string {
