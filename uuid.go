@@ -36,6 +36,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -60,6 +61,7 @@ const epochStart = 122192928000000000
 
 // UUID v1/v2 storage.
 var (
+	storageMutex  sync.Mutex
 	clockSequence uint16
 	lastTime      uint64
 	hardwareAddr  [6]byte
@@ -212,18 +214,6 @@ func (u *UUID) UnmarshalBinary(data []byte) error {
 	return nil
 }
 
-// Returns UUID epoch timestamp
-func getTimestamp() uint64 {
-	timeNow := epochFunc()
-	// Clock changed backwards since last UUID generation.
-	// Should increase clock sequence.
-	if timeNow <= lastTime {
-		clockSequence++
-	}
-	lastTime = timeNow
-	return timeNow
-}
-
 // FromBytes returns UUID converted from raw byte slice input.
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
@@ -262,16 +252,33 @@ func FromString(input string) (u UUID, err error) {
 	return
 }
 
+// Returns UUID v1/v2 storage state.
+// Returns epoch timestamp and clock sequence.
+func getStorage() (uint64, uint16) {
+	storageMutex.Lock()
+	defer storageMutex.Unlock()
+
+	timeNow := epochFunc()
+	// Clock changed backwards since last UUID generation.
+	// Should increase clock sequence.
+	if timeNow <= lastTime {
+		clockSequence++
+	}
+	lastTime = timeNow
+
+	return timeNow, clockSequence
+}
+
 // NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
 	u := UUID{}
 
-	timeNow := getTimestamp()
+	timeNow, clockSeq := getStorage()
 
 	binary.BigEndian.PutUint32(u[0:], uint32(timeNow))
 	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
 	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
-	binary.BigEndian.PutUint16(u[8:], clockSequence)
+	binary.BigEndian.PutUint16(u[8:], clockSeq)
 
 	copy(u[10:], hardwareAddr[:])
 
@@ -292,11 +299,11 @@ func NewV2(domain byte) UUID {
 		binary.BigEndian.PutUint32(u[0:], posixGID)
 	}
 
-	timeNow := getTimestamp()
+	timeNow, clockSeq := getStorage()
 
 	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
 	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
-	binary.BigEndian.PutUint16(u[8:], clockSequence)
+	binary.BigEndian.PutUint16(u[8:], clockSeq)
 	u[9] = domain
 
 	copy(u[10:], hardwareAddr[:])
