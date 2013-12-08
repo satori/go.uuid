@@ -128,10 +128,9 @@ func TestSetVariant(t *testing.T) {
 
 func TestFromBytes(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
-	bytes1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-
-	u1, err := FromBytes(bytes1)
+	u1, err := FromBytes(b1)
 	if err != nil {
 		t.Errorf("Error parsing UUID from bytes: %s", err)
 	}
@@ -140,11 +139,48 @@ func TestFromBytes(t *testing.T) {
 		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
 	}
 
-	bytes2 := []byte{}
+	b2 := []byte{}
 
-	_, err = FromBytes(bytes2)
+	_, err = FromBytes(b2)
 	if err == nil {
 		t.Errorf("Should return error parsing from empty byte slice, got %s", err)
+	}
+}
+
+func TestMarshalBinary(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	b2, err := u.MarshalBinary()
+	if err != nil {
+		t.Errorf("Error marshaling UUID: %s", err)
+	}
+
+	if !bytes.Equal(b1, b2) {
+		t.Errorf("Marshaled UUID should be %s, got %s", b1, b2)
+	}
+}
+
+func TestUnmarshalBinary(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	u1 := UUID{}
+	err := u1.UnmarshalBinary(b1)
+	if err != nil {
+		t.Errorf("Error unmarshaling UUID: %s", err)
+	}
+
+	if !Equal(u, u1) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
+	}
+
+	b2 := []byte{}
+	u2 := UUID{}
+
+	err = u2.UnmarshalBinary(b2)
+	if err == nil {
+		t.Errorf("Should return error unmarshalling from empty byte slice, got %s", err)
 	}
 }
 
@@ -185,6 +221,43 @@ func TestFromString(t *testing.T) {
 
 	if !Equal(u, u3) {
 		t.Errorf("UUIDs should be equal: %s and %s", u, u3)
+	}
+}
+
+func TestMarshalText(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	b2, err := u.MarshalText()
+	if err != nil {
+		t.Errorf("Error marshaling UUID: %s", err)
+	}
+
+	if !bytes.Equal(b1, b2) {
+		t.Errorf("Marshaled UUID should be %s, got %s", b1, b2)
+	}
+}
+
+func TestUnmarshalText(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+	u1 := UUID{}
+	err := u1.UnmarshalText(b1)
+	if err != nil {
+		t.Errorf("Error unmarshaling UUID: %s", err)
+	}
+
+	if !Equal(u, u1) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
+	}
+
+	b2 := []byte("")
+	u2 := UUID{}
+
+	err = u2.UnmarshalText(b2)
+	if err == nil {
+		t.Errorf("Should return error trying to unmarshal from empty string")
 	}
 }
 

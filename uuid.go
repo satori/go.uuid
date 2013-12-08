@@ -177,6 +177,41 @@ func (u *UUID) SetVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
+// MarshalText implements the encoding.TextMarshaler interface.
+// The encoding is the same as returned by String.
+func (u UUID) MarshalText() (text []byte, err error) {
+	text = []byte(u.String())
+	return
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// UUID is expected in a form accepted by FromString.
+func (u *UUID) UnmarshalText(text []byte) error {
+	s := string(text)
+	u2, err := FromString(s)
+	if err != nil {
+		return err
+	}
+	*u = u2
+	return nil
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
+func (u UUID) MarshalBinary() (data []byte, err error) {
+	data = u.Bytes()
+	return
+}
+
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+func (u *UUID) UnmarshalBinary(data []byte) error {
+	u2, err := FromBytes(data)
+	if err != nil {
+		return err
+	}
+	*u = u2
+	return nil
+}
+
 // Returns UUID epoch timestamp
 func getTimestamp() uint64 {
 	timeNow := epochFunc()
