@@ -29,8 +29,10 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
+	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"net"
@@ -212,6 +214,39 @@ func (u *UUID) UnmarshalBinary(data []byte) error {
 	}
 	*u = u2
 	return nil
+}
+
+// Scan implements the sql.Scanner interface.
+// Supports []byte and string
+func (u *UUID) Scan(src interface{}) error {
+	var (
+		u2  UUID
+		err error
+	)
+	switch src.(type) {
+	case []byte:
+		b := src.([]byte)
+		// Try to parse as string if length is not 16
+		if len(b) == 16 {
+			u2, err = FromBytes(b)
+		} else {
+			u2, err = FromString(string(b))
+		}
+	case string:
+		u2, err = FromString(src.(string))
+	default:
+		return errors.New("uuid: unsupported source format")
+	}
+	if err != nil {
+		return fmt.Errorf("uuid: error scanning: %s", err)
+	}
+	(*u) = u2
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
+func (u UUID) Value() (driver.Value, error) {
+	return u.String(), nil
 }
 
 // FromBytes returns UUID converted from raw byte slice input.

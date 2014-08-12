@@ -184,6 +184,66 @@ func TestUnmarshalBinary(t *testing.T) {
 	}
 }
 
+func TestScan(t *testing.T) {
+	u1, err := FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	u2 := UUID{}
+	err = u2.Scan(u1.String())
+	if err != nil {
+		t.Errorf("Error scanning UUID: %s", err)
+	}
+	if !Equal(u1, u2) {
+		t.Errorf("UUIDs should be equal: %s and %s", u1, u2)
+	}
+
+	u3 := UUID{}
+	err = u3.Scan(u1.Bytes())
+	if err != nil {
+		t.Errorf("Error scanning UUID: %s", err)
+	}
+	if !Equal(u1, u3) {
+		t.Errorf("UUIDs should be equal: %s and %s", u1, u2)
+	}
+
+	u4 := UUID{}
+	err = u4.Scan([]byte(u1.String()))
+	if err != nil {
+		t.Errorf("Error scanning UUID: %s", err)
+	}
+	if !Equal(u1, u4) {
+		t.Errorf("UUIDs should be equal: %s and %s", u1, u2)
+	}
+
+	u5 := UUID{}
+	err = u5.Scan("invalid-uuid-string")
+	if err == nil {
+		t.Errorf("Should return error trying to parse an invalid string, got %s", err)
+	}
+
+	u6 := UUID{}
+	err = u6.Scan(1)
+	if err == nil {
+		t.Errorf("Should return error trying to parse an int, got %s", err)
+	}
+}
+
+func TestValue(t *testing.T) {
+	u, err := FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+	val, err := u.Value()
+	if err != nil {
+		t.Errorf("Error getting UUID value: %s", err)
+	}
+	if val != u.String() {
+		t.Errorf("Wrong value returned, should be equal: %s and %s", val, u)
+	}
+}
+
 func TestFromString(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
