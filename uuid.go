@@ -1,4 +1,4 @@
-// Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>
+// Copyright (C) 2013-2014 by Maxim Bublis <b@codemonkey.ru>
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -205,25 +205,21 @@ func (u UUID) MarshalBinary() (data []byte, err error) {
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-func (u *UUID) UnmarshalBinary(data []byte) error {
-	u2, err := FromBytes(data)
-	if err != nil {
-		return err
+// It will return error if the slice isn't 16 bytes long.
+func (u *UUID) UnmarshalBinary(data []byte) (err error) {
+	if len(data) != 16 {
+		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(data))
+		return
 	}
-	*u = u2
-	return nil
+	copy(u[:], data)
+
+	return
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
-	if len(input) != 16 {
-		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(input))
-		return
-	}
-
-	copy(u[:], input)
-
+	err = u.UnmarshalBinary(input)
 	return
 }
 
