@@ -413,8 +413,10 @@ func (u *UUID) Unmarshal(data []byte) (err error) {
 }
 
 func (u UUID) MarshalTo(data []byte) (int, error) {
-	for i, b := range u.Bytes() {
-		data[i] = b
-	}
-	return 16, nil
+	return copy(data, u.Bytes()), nil
+	// u.Bytes()
+	// for i, b := range u.Bytes() {
+	// 	data[i] = b
+	// }
+	// return 16, nil
 }
