@@ -52,6 +52,16 @@ func TestEqual(t *testing.T) {
 	}
 }
 
+func TestEqualWithReceiver(t *testing.T) {
+	if !NamespaceDNS.Equal(NamespaceDNS) {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
+	}
+
+	if NamespaceDNS.Equal(NamespaceURL) {
+		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceURL)
+	}
+}
+
 func TestOr(t *testing.T) {
 	u1 := UUID{0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff}
 	u2 := UUID{0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00}
@@ -79,6 +89,12 @@ func TestVersion(t *testing.T) {
 
 	if u.Version() != 1 {
 		t.Errorf("Incorrect version for UUID: %d", u.Version())
+	}
+}
+
+func TestSize(t *testing.T) {
+	if NamespaceDNS.Size() != 16 {
+		t.Errorf("Incorrect size for UUID: %d", NamespaceDNS.Size())
 	}
 }
 
@@ -455,5 +471,38 @@ func TestNewV5(t *testing.T) {
 	u4 := NewV5(NamespaceURL, "golang.org")
 	if Equal(u1, u4) {
 		t.Errorf("UUIDv3 generated same UUIDs for sane names in different namespaces: %s and %s", u1, u4)
+	}
+}
+
+func TestUnmarshal(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	u1 := UUID{}
+	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+
+	if err := u1.Unmarshal(b1); err != nil {
+		t.Errorf("Error unmarshalling UUID from bytes: %s", err)
+	}
+
+	if !Equal(u, u1) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
+	}
+
+	b2 := []byte{}
+
+	if err := u1.Unmarshal(b2); err == nil {
+		t.Errorf("Should return error parsing from empty byte slice, got %s", err)
+	}
+}
+
+func TestMarshalTo(t *testing.T) {
+	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	buf := make([]byte, 16)
+
+	if _, err := u.MarshalTo(buf); err != nil {
+		t.Errorf("Error marshalling UUID to bytes: %s", err)
+	}
+
+	if !bytes.Equal(buf, u.Bytes()) {
+		t.Errorf("UUID byte slices should be equal: %s and %s", u.Bytes(), buf)
 	}
 }

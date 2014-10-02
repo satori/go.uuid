@@ -146,9 +146,19 @@ func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
 }
 
+// Equal returns true if UUID is equal to passed UUID, otherwise returns false
+func (u1 UUID) Equal(u2 UUID) bool {
+	return Equal(u1, u2)
+}
+
 // Version returns algorithm version used to generate UUID.
 func (u UUID) Version() uint {
 	return uint(u[6] >> 4)
+}
+
+// Size returns the size of the UUID
+func (u UUID) Size() int {
+	return len(u.Bytes())
 }
 
 // Variant returns UUID layout variant.
@@ -393,4 +403,18 @@ func newFromHash(h hash.Hash, ns UUID, name string) UUID {
 	copy(u[:], h.Sum(nil))
 
 	return u
+}
+
+// Support gogoprotobuf
+
+func (u *UUID) Unmarshal(data []byte) (err error) {
+	(*u), err = FromBytes(data)
+	return
+}
+
+func (u UUID) MarshalTo(data []byte) (int, error) {
+	for i, b := range u.Bytes() {
+		data[i] = b
+	}
+	return 16, nil
 }
