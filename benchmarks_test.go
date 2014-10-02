@@ -1,4 +1,4 @@
-// Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>
+// Copyright (C) 2013-2014 by Maxim Bublis <b@codemonkey.ru>
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -80,5 +80,35 @@ func BenchmarkNewV4(b *testing.B) {
 func BenchmarkNewV5(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewV5(NamespaceDNS, "www.example.com")
+	}
+}
+
+func BenchmarkMarshalBinary(b *testing.B) {
+	u := NewV4()
+	for i := 0; i < b.N; i++ {
+		u.MarshalBinary()
+	}
+}
+
+func BenchmarkMarshalText(b *testing.B) {
+	u := NewV4()
+	for i := 0; i < b.N; i++ {
+		u.MarshalText()
+	}
+}
+
+func BenchmarkUnmarshalBinary(b *testing.B) {
+	bytes := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	u := UUID{}
+	for i := 0; i < b.N; i++ {
+		u.UnmarshalBinary(bytes)
+	}
+}
+
+func BenchmarkUnmarshalText(b *testing.B) {
+	bytes := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	u := UUID{}
+	for i := 0; i < b.N; i++ {
+		u.UnmarshalText(bytes)
 	}
 }

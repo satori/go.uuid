@@ -1,4 +1,4 @@
-// Copyright (C) 2013 by Maxim Bublis <b@codemonkey.ru>
+// Copyright (C) 2013-2014 by Maxim Bublis <b@codemonkey.ru>
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -37,7 +37,6 @@ import (
 	"hash"
 	"net"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -69,6 +68,12 @@ var (
 	hardwareAddr  [6]byte
 	posixUID      = uint32(os.Getuid())
 	posixGID      = uint32(os.Getgid())
+)
+
+// String parse helpers.
+var (
+	urnPrefix  = []byte("urn:uuid:")
+	byteGroups = []int{8, 4, 4, 4, 12}
 )
 
 // Epoch calculation function
@@ -189,15 +194,40 @@ func (u UUID) MarshalText() (text []byte, err error) {
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
-// UUID is expected in a form accepted by FromString.
-func (u *UUID) UnmarshalText(text []byte) error {
-	s := string(text)
-	u2, err := FromString(s)
-	if err != nil {
-		return err
+// Following formats are supported:
+// "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+func (u *UUID) UnmarshalText(text []byte) (err error) {
+	if len(text) < 32 {
+		err = fmt.Errorf("uuid: invalid UUID string: %s", text)
+		return
 	}
-	*u = u2
-	return nil
+
+	if bytes.Equal(text[:9], urnPrefix) {
+		text = text[9:]
+	} else if text[0] == '{' {
+		text = text[1:]
+	}
+
+	b := u[:]
+
+	for _, byteGroup := range byteGroups {
+		if text[0] == '-' {
+			text = text[1:]
+		}
+
+		_, err = hex.Decode(b[:byteGroup/2], text[:byteGroup])
+
+		if err != nil {
+			return
+		}
+
+		text = text[byteGroup:]
+		b = b[byteGroup/2:]
+	}
+
+	return
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
@@ -207,13 +237,15 @@ func (u UUID) MarshalBinary() (data []byte, err error) {
 }
 
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
-func (u *UUID) UnmarshalBinary(data []byte) error {
-	u2, err := FromBytes(data)
-	if err != nil {
-		return err
+// It will return error if the slice isn't 16 bytes long.
+func (u *UUID) UnmarshalBinary(data []byte) (err error) {
+	if len(data) != 16 {
+		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(data))
+		return
 	}
-	*u = u2
-	return nil
+	copy(u[:], data)
+
+	return
 }
 
 // Scan implements the sql.Scanner interface.
@@ -252,38 +284,14 @@ func (u UUID) Value() (driver.Value, error) {
 // FromBytes returns UUID converted from raw byte slice input.
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
-	if len(input) != 16 {
-		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(input))
-		return
-	}
-
-	copy(u[:], input)
-
+	err = u.UnmarshalBinary(input)
 	return
 }
 
 // FromString returns UUID parsed from string input.
-// Following formats are supported:
-// "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
-// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+// Input is expected in a form accepted by UnmarshalText.
 func FromString(input string) (u UUID, err error) {
-	s := strings.Replace(input, "-", "", -1)
-
-	if len(s) == 41 && s[:9] == "urn:uuid:" {
-		s = s[9:]
-	} else if len(s) == 34 && s[0] == '{' && s[33] == '}' {
-		s = s[1:33]
-	}
-
-	if len(s) != 32 {
-		err = fmt.Errorf("uuid: invalid UUID string: %s", input)
-		return
-	}
-
-	b := []byte(s)
-	_, err = hex.Decode(u[:], b)
-
+	err = u.UnmarshalText([]byte(input))
 	return
 }
 
