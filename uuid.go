@@ -247,6 +247,31 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	return
 }
 
+func (u UUID) MarshalJSON() ([]byte, error) {
+	if u == Nil {
+		return []byte("null"), nil
+	} else {
+		return []byte(`"` + u.String() + `"`), nil
+	}
+}
+
+func (u *UUID) UnmarshalJSON(val interface{}) error {
+	if val == nil {
+		*u = Nil
+	}
+
+	if v, ok := val.(string); ok {
+		if n, err := FromString(v); err != nil {
+			return err
+		} else {
+			*u = n
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid value for UnmarshalJson()")
+}
+
 // FromBytes returns UUID converted from raw byte slice input.
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
