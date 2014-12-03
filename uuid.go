@@ -29,6 +29,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
+	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
@@ -119,6 +120,7 @@ var (
 	NamespaceURL, _  = FromString("6ba7b811-9dad-11d1-80b4-00c04fd430c8")
 	NamespaceOID, _  = FromString("6ba7b812-9dad-11d1-80b4-00c04fd430c8")
 	NamespaceX500, _ = FromString("6ba7b814-9dad-11d1-80b4-00c04fd430c8")
+	Nil              = UUID([16]byte{})
 )
 
 // And returns result of binary AND of two UUIDs.
@@ -244,6 +246,51 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	copy(u[:], data)
 
 	return
+}
+
+func (u UUID) Value() (driver.Value, error) {
+	if u == Nil {
+		return nil, nil
+	} else {
+		return u.String(), nil
+	}
+}
+
+func (u *UUID) Scan(value interface{}) error {
+	if value == nil {
+		*u = Nil
+		return nil
+	}
+
+	if v, ok := value.(string); ok {
+		if n, err := FromString(v); err != nil {
+			return err
+		} else {
+			*u = n
+			return nil
+		}
+	} else if v, ok := value.([]byte); ok {
+		if len(v) == 16 {
+			if n, err := FromBytes(v); err != nil {
+				return err
+			} else {
+				*u = n
+				return nil
+			}
+		} else if len(v) == 36 {
+			if n, err := FromString(string(v)); err != nil {
+				return err
+			} else {
+				*u = n
+				return nil
+			}
+		}
+	} else if v, ok := value.(UUID); ok {
+		*u = v
+		return nil
+	}
+
+	return fmt.Errorf("invalid value for Scan(): %#v", value)
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
