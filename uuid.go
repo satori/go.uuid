@@ -31,6 +31,7 @@ import (
 	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"net"
@@ -119,6 +120,7 @@ var (
 	NamespaceURL, _  = FromString("6ba7b811-9dad-11d1-80b4-00c04fd430c8")
 	NamespaceOID, _  = FromString("6ba7b812-9dad-11d1-80b4-00c04fd430c8")
 	NamespaceX500, _ = FromString("6ba7b814-9dad-11d1-80b4-00c04fd430c8")
+	Nil              = UUID([16]byte{})
 )
 
 // And returns result of binary AND of two UUIDs.
@@ -244,6 +246,37 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	copy(u[:], data)
 
 	return
+}
+
+func (u UUID) MarshalJSON() ([]byte, error) {
+	if u == Nil {
+		return []byte("null"), nil
+	} else {
+		return []byte(`"` + u.String() + `"`), nil
+	}
+}
+
+func (u *UUID) UnmarshalJSON(input []byte) error {
+	var val interface{}
+	if err := json.Unmarshal(input, &val); err != nil {
+		return err
+	}
+
+	if val == nil {
+		*u = Nil
+		return nil
+	}
+
+	if v, ok := val.(string); ok {
+		if n, err := FromString(v); err != nil {
+			return err
+		} else {
+			*u = n
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid value for UnmarshalJson()")
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
