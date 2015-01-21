@@ -420,3 +420,7 @@ func (u UUID) MarshalTo(data []byte) (int, error) {
 	// }
 	// return 16, nil
 }
+
+func (u UUID) Marshal() ([]byte, error) {
+	return u.Bytes(), nil
+}
