@@ -29,8 +29,10 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"crypto/sha1"
+	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"hash"
 	"net"
@@ -144,9 +146,19 @@ func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
 }
 
+// Equal returns true if UUID is equal to passed UUID, otherwise returns false
+func (u1 UUID) Equal(u2 UUID) bool {
+	return Equal(u1, u2)
+}
+
 // Version returns algorithm version used to generate UUID.
 func (u UUID) Version() uint {
 	return uint(u[6] >> 4)
+}
+
+// Size returns the size of the UUID
+func (u UUID) Size() int {
+	return len(u.Bytes())
 }
 
 // Variant returns UUID layout variant.
@@ -244,6 +256,39 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	copy(u[:], data)
 
 	return
+}
+
+// Scan implements the sql.Scanner interface.
+// Supports []byte and string
+func (u *UUID) Scan(src interface{}) error {
+	var (
+		u2  UUID
+		err error
+	)
+	switch src.(type) {
+	case []byte:
+		b := src.([]byte)
+		// Try to parse as string if length is not 16
+		if len(b) == 16 {
+			u2, err = FromBytes(b)
+		} else {
+			u2, err = FromString(string(b))
+		}
+	case string:
+		u2, err = FromString(src.(string))
+	default:
+		return errors.New("uuid: unsupported source format")
+	}
+	if err != nil {
+		return fmt.Errorf("uuid: error scanning: %s", err)
+	}
+	(*u) = u2
+	return nil
+}
+
+// Value implements the driver.Valuer interface.
+func (u UUID) Value() (driver.Value, error) {
+	return u.String(), nil
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
@@ -358,4 +403,30 @@ func newFromHash(h hash.Hash, ns UUID, name string) UUID {
 	copy(u[:], h.Sum(nil))
 
 	return u
+}
+
+// Support gogoprotobuf
+
+func (u *UUID) Unmarshal(data []byte) (err error) {
+	if len(data) == 0 {
+		u = nil
+		return nil
+	}
+
+	*u, err = FromBytes(data)
+	return nil
+}
+
+func (u UUID) MarshalTo(data []byte) (int, error) {
+	if len(u) == 0 {
+		return 0, nil
+	}
+	return copy(data, u.Bytes()), nil
+}
+
+func (u UUID) Marshal() ([]byte, error) {
+	if len(u) == 0 {
+		return nil, nil
+	}
+	return u.Bytes(), nil
 }
