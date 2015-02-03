@@ -408,19 +408,25 @@ func newFromHash(h hash.Hash, ns UUID, name string) UUID {
 // Support gogoprotobuf
 
 func (u *UUID) Unmarshal(data []byte) (err error) {
-	(*u), err = FromBytes(data)
-	return
+	if len(data) == 0 {
+		u = nil
+		return nil
+	}
+
+	*u, err = FromBytes(data)
+	return nil
 }
 
 func (u UUID) MarshalTo(data []byte) (int, error) {
+	if len(u) == 0 {
+		return 0, nil
+	}
 	return copy(data, u.Bytes()), nil
-	// u.Bytes()
-	// for i, b := range u.Bytes() {
-	// 	data[i] = b
-	// }
-	// return 16, nil
 }
 
 func (u UUID) Marshal() ([]byte, error) {
+	if len(u) == 0 {
+		return nil, nil
+	}
 	return u.Bytes(), nil
 }

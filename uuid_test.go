@@ -489,8 +489,8 @@ func TestUnmarshal(t *testing.T) {
 
 	b2 := []byte{}
 
-	if err := u1.Unmarshal(b2); err == nil {
-		t.Errorf("Should return error parsing from empty byte slice, got %s", err)
+	if err := u1.Unmarshal(b2); err != nil {
+		t.Errorf("Should not return error parsing from empty byte slice, got %s", err)
 	}
 }
 
