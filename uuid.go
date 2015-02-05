@@ -246,6 +246,24 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	return
 }
 
+// Scan implements the sql.Scanner interface.
+// A 16-byte slice is handled by UnmarshalBinary, while
+// a longer byte slice or a string is handled by UnmarshalText.
+func (u *UUID) Scan(src interface{}) error {
+	switch src := src.(type) {
+	case []byte:
+		if len(src) == 16 {
+			return u.UnmarshalBinary(src)
+		}
+		return u.UnmarshalText(src)
+
+	case string:
+		return u.UnmarshalText([]byte(src))
+	}
+
+	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
+}
+
 // FromBytes returns UUID converted from raw byte slice input.
 // It will return error if the slice isn't 16 bytes long.
 func FromBytes(input []byte) (u UUID, err error) {
