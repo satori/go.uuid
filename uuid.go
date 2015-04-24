@@ -113,6 +113,10 @@ func unixTimeFunc() uint64 {
 // described in RFC 4122.
 type UUID [16]byte
 
+// The nil UUID is special form of UUID that is specified to have all
+// 128 bits set to zero.
+var Nil = UUID{}
+
 // Predefined namespace UUIDs.
 var (
 	NamespaceDNS, _  = FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
