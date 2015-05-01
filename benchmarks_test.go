@@ -112,3 +112,10 @@ func BenchmarkUnmarshalText(b *testing.B) {
 		u.UnmarshalText(bytes)
 	}
 }
+
+func BenchmarkMarshalToString(b *testing.B) {
+	u := NewV4()
+	for i := 0; i < b.N; i++ {
+		u.String()
+	}
+}
