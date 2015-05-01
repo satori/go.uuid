@@ -58,6 +58,9 @@ const (
 // UUID epoch (October 15, 1582) and Unix epoch (January 1, 1970).
 const epochStart = 122192928000000000
 
+// Used in string method conversion
+const dash byte = '-'
+
 // UUID v1/v2 storage.
 var (
 	storageMutex  sync.Mutex
@@ -174,8 +177,19 @@ func (u UUID) Bytes() []byte {
 // Returns canonical string representation of UUID:
 // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
 func (u UUID) String() string {
-	return fmt.Sprintf("%x-%x-%x-%x-%x",
-		u[:4], u[4:6], u[6:8], u[8:10], u[10:])
+	buf := make([]byte, 36)
+
+	hex.Encode(buf[0:8], u[0:4])
+	buf[8] = dash
+	hex.Encode(buf[9:13], u[4:6])
+	buf[13] = dash
+	hex.Encode(buf[14:18], u[6:8])
+	buf[18] = dash
+	hex.Encode(buf[19:23], u[8:10])
+	buf[23] = dash
+	hex.Encode(buf[24:], u[10:])
+
+	return string(buf)
 }
 
 // SetVersion sets version bits.
