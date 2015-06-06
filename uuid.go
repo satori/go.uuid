@@ -64,6 +64,7 @@ const dash byte = '-'
 // UUID v1/v2 storage.
 var (
 	storageMutex  sync.Mutex
+	epochFunc     func() uint64 = unixTimeFunc
 	clockSequence uint16
 	lastTime      uint64
 	hardwareAddr  [6]byte
@@ -76,9 +77,6 @@ var (
 	urnPrefix  = []byte("urn:uuid:")
 	byteGroups = []int{8, 4, 4, 4, 12}
 )
-
-// Epoch calculation function
-var epochFunc func() uint64
 
 // Initialize storage
 func init() {
@@ -102,7 +100,6 @@ func init() {
 			}
 		}
 	}
-	epochFunc = unixTimeFunc
 }
 
 // Returns difference in 100-nanosecond intervals between
