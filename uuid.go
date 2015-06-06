@@ -81,24 +81,30 @@ var (
 // Initialize storage
 func init() {
 	buf := make([]byte, 2)
-	rand.Read(buf)
+	safeRandom(buf)
 	clockSequence = binary.BigEndian.Uint16(buf)
-
-	// Initialize hardwareAddr randomly in case
-	// of real network interfaces absence
-	rand.Read(hardwareAddr[:])
-
-	// Set multicast bit as recommended in RFC 4122
-	hardwareAddr[0] |= 0x01
 
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, iface := range interfaces {
 			if len(iface.HardwareAddr) >= 6 {
 				copy(hardwareAddr[:], iface.HardwareAddr)
-				break
+				return
 			}
 		}
+	}
+
+	// Initialize hardwareAddr randomly in case
+	// of real network interfaces absence
+	safeRandom(hardwareAddr[:])
+
+	// Set multicast bit as recommended in RFC 4122
+	hardwareAddr[0] |= 0x01
+}
+
+func safeRandom(dest []byte) {
+	if _, err := rand.Read(dest); err != nil {
+		panic(err)
 	}
 }
 
@@ -367,7 +373,7 @@ func NewV3(ns UUID, name string) UUID {
 // NewV4 returns random generated UUID.
 func NewV4() UUID {
 	u := UUID{}
-	rand.Read(u[:])
+	safeRandom(u[:])
 	u.SetVersion(4)
 	u.SetVariant()
 
