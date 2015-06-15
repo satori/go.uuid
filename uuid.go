@@ -65,7 +65,7 @@ const dash byte = '-'
 var (
 	storageMutex  sync.Mutex
 	storageOnce   sync.Once
-	epochFunc     func() uint64 = unixTimeFunc
+	epochFunc     = unixTimeFunc
 	clockSequence uint16
 	lastTime      uint64
 	hardwareAddr  [6]byte
