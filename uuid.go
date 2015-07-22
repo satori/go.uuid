@@ -299,11 +299,31 @@ func FromBytes(input []byte) (u UUID, err error) {
 	return
 }
 
+// FromBytesOrNil returns UUID converted from raw byte slice input.
+// Same behavior as FromBytes, but returns a Nil UUID on error.
+func FromBytesOrNil(input []byte) UUID {
+	uuid, err := FromBytes(input)
+	if err != nil {
+		return Nil
+	}
+	return uuid
+}
+
 // FromString returns UUID parsed from string input.
 // Input is expected in a form accepted by UnmarshalText.
 func FromString(input string) (u UUID, err error) {
 	err = u.UnmarshalText([]byte(input))
 	return
+}
+
+// FromStringOrNil returns UUID parsed from string input.
+// Same behavior as FromString, but returns a Nil UUID on error.
+func FromStringOrNil(input string) UUID {
+	uuid, err := FromString(input)
+	if err != nil {
+		return Nil
+	}
+	return uuid
 }
 
 // Returns UUID v1/v2 storage state.
