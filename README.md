@@ -24,7 +24,7 @@ Use the `go` command:
 
 UUID package requires any stable version of Go Programming Language.
 
-It is tested against following versions of Go: 1.0-1.4
+It is tested against following versions of Go: 1.0-1.5
 
 ## Example
 
