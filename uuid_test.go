@@ -24,6 +24,7 @@ package uuid
 import (
 	"bytes"
 	"testing"
+	"time"
 )
 
 func TestBytes(t *testing.T) {
@@ -399,6 +400,26 @@ func TestNewV1(t *testing.T) {
 	}
 
 	epochFunc = oldFunc
+}
+
+func TestNewV1FromTime(t *testing.T) {
+	now := time.Now()
+	u := NewV1FromTime(now)
+
+	if u.Version() != 1 {
+		t.Errorf("UUIDv1 generated with incorrect version: %d", u.Version())
+	}
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv1 generated with incorrect variant: %d", u.Variant())
+	}
+
+	u1 := NewV1FromTime(now)
+	u2 := NewV1FromTime(now)
+
+	if !Equal(u1, u2) {
+		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u1, u2)
+	}
 }
 
 func TestNewV2(t *testing.T) {
