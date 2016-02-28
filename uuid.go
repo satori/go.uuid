@@ -293,6 +293,9 @@ func (u *UUID) Scan(src interface{}) error {
 
 	case string:
 		return u.UnmarshalText([]byte(src))
+
+	case UUID:
+		return u.UnmarshalBinary(src.Bytes())
 	}
 
 	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
