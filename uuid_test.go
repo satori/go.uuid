@@ -224,6 +224,18 @@ func TestFromString(t *testing.T) {
 	}
 }
 
+func TestFromStringShort(t *testing.T) {
+	// Invalid 35-character UUID string
+	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c"
+
+	for i := len(s1); i >= 0; i-- {
+		_, err := FromString(s1[:i])
+		if err == nil {
+			t.Errorf("Should return error trying to parse too short string, got %s", err)
+		}
+	}
+}
+
 func TestFromStringOrNil(t *testing.T) {
 	u := FromStringOrNil("")
 	if u != Nil {
