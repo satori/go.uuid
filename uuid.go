@@ -229,33 +229,33 @@ func (u UUID) MarshalText() (text []byte, err error) {
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
 // It works the same as UnmarshalText except the quotation marks are removed if present.
-func (u *UUID) UnmarshalJSON(text []byte) (err error) {
-	if len(text) < 32 {
-		err = fmt.Errorf("uuid: invalid UUID string: %s", text)
+func (u *UUID) UnmarshalJSON(data []byte) (err error) {
+	if len(data) < 32 {
+		err = fmt.Errorf("uuid: invalid UUID string: %s", data)
 		return
 	}
 
-	if bytes.Equal(text[:9], urnPrefix) {
-		text = text[9:]
-	} else if text[0] == '{' {
-		text = text[1:]
-	} else if text[0] == '"' {
-		text = text[1:]
+	if bytes.Equal(data[:9], urnPrefix) {
+		data = data[9:]
+	} else if data[0] == '{' {
+		data = data[1:]
+	} else if data[0] == '"' {
+		data = data[1:]
 	}
 
 	b := u[:]
 	for _, byteGroup := range byteGroups {
-		if text[0] == '-' {
-			text = text[1:]
+		if data[0] == '-' {
+			data = data[1:]
 		}
 
-		_, err = hex.Decode(b[:byteGroup/2], text[:byteGroup])
+		_, err = hex.Decode(b[:byteGroup/2], data[:byteGroup])
 
 		if err != nil {
 			return
 		}
 
-		text = text[byteGroup:]
+		data = data[byteGroup:]
 		b = b[byteGroup/2:]
 	}
 
