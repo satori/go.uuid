@@ -60,7 +60,10 @@ const (
 const epochStart = 122192928000000000
 
 // Used in string method conversion
-const dash byte = '-'
+const (
+	dash byte = '-'
+	quotationMark byte = '"'
+)
 
 // UUID v1/v2 storage.
 var (
@@ -216,9 +219,20 @@ func (u *UUID) SetVariant() {
 // MarshalJSON implements the json.Marshaler interface.
 // The encoding is the same as returned by String except the quotation marks are added around.
 func (u UUID) MarshalJSON() (data []byte, err error) {
-	text := []byte(u.String())
-	data = append([]byte{'"'}, text...)
-	data = append(data, '"')
+	data = make([]byte, 38)
+
+	data[0] = quotationMark
+	hex.Encode(data[1:9], u[0:4])
+	data[9] = dash
+	hex.Encode(data[10:14], u[4:6])
+	data[14] = dash
+	hex.Encode(data[15:19], u[6:8])
+	data[19] = dash
+	hex.Encode(data[20:24], u[8:10])
+	data[24] = dash
+	hex.Encode(data[25:37], u[10:])
+	data[37] = quotationMark
+
 	return
 }
 
