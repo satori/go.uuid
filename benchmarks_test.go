@@ -90,6 +90,13 @@ func BenchmarkMarshalBinary(b *testing.B) {
 	}
 }
 
+func BenchmarkMarshalJSON(b *testing.B) {
+	u := NewV4()
+	for i := 0; i < b.N; i++ {
+		u.MarshalJSON()
+	}
+}
+
 func BenchmarkMarshalText(b *testing.B) {
 	u := NewV4()
 	for i := 0; i < b.N; i++ {
@@ -102,6 +109,22 @@ func BenchmarkUnmarshalBinary(b *testing.B) {
 	u := UUID{}
 	for i := 0; i < b.N; i++ {
 		u.UnmarshalBinary(bytes)
+	}
+}
+
+func BenchmarkUnmarshalJSON1(b *testing.B) {
+	bytes := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	u := UUID{}
+	for i := 0; i < b.N; i++ {
+		u.UnmarshalJSON(bytes)
+	}
+}
+
+func BenchmarkUnmarshalJSON2(b *testing.B) {
+	bytes := []byte("\"6ba7b810-9dad-11d1-80b4-00c04fd430c8\"")
+	u := UUID{}
+	for i := 0; i < b.N; i++ {
+		u.UnmarshalJSON(bytes)
 	}
 }
 
