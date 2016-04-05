@@ -213,10 +213,52 @@ func (u *UUID) SetVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
+// MarshalJSON implements the json.Marshaler interface.
+// The encoding is the same as returned by String except the quotation marks are added around.
+func (u UUID) MarshalJSON() (data []byte, err error) {
+	data = []byte(fmt.Sprintf("\"%x-%x-%x-%x-%x\"", u[:4], u[4:6], u[6:8], u[8:10], u[10:]))
+	return
+}
+
 // MarshalText implements the encoding.TextMarshaler interface.
 // The encoding is the same as returned by String.
 func (u UUID) MarshalText() (text []byte, err error) {
 	text = []byte(u.String())
+	return
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// It works the same as UnmarshalText except the quotation marks are removed if present.
+func (u *UUID) UnmarshalJSON(text []byte) (err error) {
+	if len(text) < 32 {
+		err = fmt.Errorf("uuid: invalid UUID string: %s", text)
+		return
+	}
+
+	if bytes.Equal(text[:9], urnPrefix) {
+		text = text[9:]
+	} else if text[0] == '{' {
+		text = text[1:]
+	} else if text[0] == '"' {
+		text = text[1:]
+	}
+
+	b := u[:]
+	for _, byteGroup := range byteGroups {
+		if text[0] == '-' {
+			text = text[1:]
+		}
+
+		_, err = hex.Decode(b[:byteGroup/2], text[:byteGroup])
+
+		if err != nil {
+			return
+		}
+
+		text = text[byteGroup:]
+		b = b[byteGroup/2:]
+	}
+
 	return
 }
 
