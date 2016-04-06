@@ -253,9 +253,13 @@ func (u *UUID) UnmarshalJSON(data []byte) (err error) {
 
 	t := data[:]
 
+	if t[0] == quotationMark {
+		t = t[1:]
+	}
+
 	if bytes.Equal(t[:9], urnPrefix) {
 		t = t[9:]
-	} else if t[0] == '{' || t[0] == '"' {
+	} else if t[0] == '{' {
 		t = t[1:]
 	}
 
