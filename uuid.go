@@ -264,7 +264,7 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 		}
 
 		if i == 4 && len(t) > byteGroup &&
-			((braced && t[byteGroup] != '}') || !braced) {
+			((braced && t[byteGroup] != '}') || len(t[byteGroup:]) > 1 || !braced) {
 			err = fmt.Errorf("uuid: UUID string too long: %s", t)
 			return
 		}

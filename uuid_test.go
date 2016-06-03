@@ -241,6 +241,7 @@ func TestFromStringLong(t *testing.T) {
 	s := []string{
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8=",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+		"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}f",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c800c04fd430c8",
 	}
 
