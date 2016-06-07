@@ -22,7 +22,7 @@ Use the `go` command:
 
 ## Requirements
 
-UUID package requires any stable version of Go Programming Language.
+UUID package requires Go >= 1.2.
 
 ## Example
 
