@@ -232,22 +232,40 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 	}
 
 	t := text[:]
+	braced := false
 
 	if bytes.Equal(t[:9], urnPrefix) {
 		t = t[9:]
 	} else if t[0] == '{' {
+		braced = true
 		t = t[1:]
 	}
 
 	b := u[:]
 
-	for _, byteGroup := range byteGroups {
-		if t[0] == '-' {
+	for i, byteGroup := range byteGroups {
+		if i > 0 && t[0] == '-' {
 			t = t[1:]
+		} else if i > 0 && t[0] != '-' {
+			err = fmt.Errorf("uuid: invalid string format")
+			return
+		}
+
+		if i == 2 {
+			if !bytes.Contains([]byte("012345"), []byte{t[0]}) {
+				err = fmt.Errorf("uuid: invalid version number: %s", t[0])
+				return
+			}
 		}
 
 		if len(t) < byteGroup {
 			err = fmt.Errorf("uuid: UUID string too short: %s", text)
+			return
+		}
+
+		if i == 4 && len(t) > byteGroup &&
+			((braced && t[byteGroup] != '}') || len(t[byteGroup:]) > 1 || !braced) {
+			err = fmt.Errorf("uuid: UUID string too long: %s", t)
 			return
 		}
 

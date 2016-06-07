@@ -236,6 +236,48 @@ func TestFromStringShort(t *testing.T) {
 	}
 }
 
+func TestFromStringLong(t *testing.T) {
+	// Invalid 37+ character UUID string
+	s := []string{
+		"6ba7b810-9dad-11d1-80b4-00c04fd430c8=",
+		"6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+		"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}f",
+		"6ba7b810-9dad-11d1-80b4-00c04fd430c800c04fd430c8",
+	}
+
+	for _, str := range s {
+		_, err := FromString(str)
+		if err == nil {
+			t.Errorf("Should return error trying to parse too long string, passed %s", str)
+		}
+	}
+}
+
+func TestFromStringInvalid(t *testing.T) {
+	// Invalid UUID string formats
+	s := []string{
+		"6ba7b8109dad11d180b400c04fd430c8",
+		"6ba7b8109dad11d180b400c04fd430c86ba7b8109dad11d180b400c04fd430c8",
+		"urn:uuid:{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+		"6ba7b8109-dad-11d1-80b4-00c04fd430c8",
+		"6ba7b810-9dad1-1d1-80b4-00c04fd430c8",
+		"6ba7b810-9dad-11d18-0b4-00c04fd430c8",
+		"6ba7b810-9dad-11d1-80b40-0c04fd430c8",
+		"6ba7b810+9dad+11d1+80b4+00c04fd430c8",
+		"6ba7b810-9dad11d180b400c04fd430c8",
+		"6ba7b8109dad-11d180b400c04fd430c8",
+		"6ba7b8109dad11d1-80b400c04fd430c8",
+		"6ba7b8109dad11d180b4-00c04fd430c8",
+	}
+
+	for _, str := range s {
+		_, err := FromString(str)
+		if err == nil {
+			t.Errorf("Should return error trying to parse invalid string, passed %s", str)
+		}
+	}
+}
+
 func TestFromStringOrNil(t *testing.T) {
 	u := FromStringOrNil("")
 	if u != Nil {
