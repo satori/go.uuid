@@ -307,7 +307,7 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	return
 }
 
-// IsZero returns true if UUID is zero
+// IsZero reports whether UUID is zero.
 func (u UUID) IsZero() bool {
 	return u == Nil
 }
