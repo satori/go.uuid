@@ -307,6 +307,11 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	return
 }
 
+// IsZero returns true if UUID is zero
+func (u UUID) IsZero() bool {
+	return u == Nil
+}
+
 // Value implements the driver.Valuer interface.
 func (u UUID) Value() (driver.Value, error) {
 	return u.String(), nil
