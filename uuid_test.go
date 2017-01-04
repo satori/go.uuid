@@ -611,7 +611,7 @@ func TestNewV5(t *testing.T) {
 
 	u = NewV5(NamespaceDNS, "python.org")
 
-	if u.String() != "886313e1-3b8a-5372-9b90-0c9aee199e5d" {
+	if u.String() != "4b04db65-b6a1-5f48-9654-353e4ded6830" {
 		t.Errorf("UUIDv5 generated incorrectly: %s", u.String())
 	}
 
