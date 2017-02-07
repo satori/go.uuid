@@ -332,7 +332,7 @@ func TestUnmarshalText(t *testing.T) {
 
 func TestUnmarshalJSON(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	b1 := []byte(`\"6ba7b810-9dad-11d1-80b4-00c04fd430c8\"`)
 
 	u1 := UUID{}
 	err := u1.UnmarshalJSON(b1)
