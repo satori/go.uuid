@@ -282,6 +282,11 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 	return
 }
 
+// UnmarshalJSON implements the encoding.JSONUnmarshaler interface.
+func (u *UUID) UnmarshalJSON(text []byte) (err error) {
+	return u.UnmarshalText(text)
+}
+
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
 func (u UUID) MarshalBinary() (data []byte, err error) {
 	data = u.Bytes()
