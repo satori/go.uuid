@@ -323,6 +323,11 @@ func (u *UUID) Scan(src interface{}) error {
 	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
 }
 
+// Returns true if the current UUID equals Nil; otherwise returns false.
+func (u *UUID) IsNil() bool {
+	return Equal(*u, Nil)
+}
+
 // Value implements the driver.Valuer interface.
 func (u NullUUID) Value() (driver.Value, error) {
 	if !u.Valid {
