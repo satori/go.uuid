@@ -23,6 +23,7 @@ package uuid
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 )
 
@@ -629,5 +630,48 @@ func TestNewV5(t *testing.T) {
 	u4 := NewV5(NamespaceURL, "golang.org")
 	if Equal(u1, u4) {
 		t.Errorf("UUIDv3 generated same UUIDs for sane names in different namespaces: %s and %s", u1, u4)
+	}
+}
+
+func TestMarshalNullUUID(t *testing.T) {
+	u := NullUUID{UUID: NewV4(), Valid: true}
+	j, err := json.Marshal(u)
+	if err != nil {
+		t.Error("Couldn't marshal a valid NullUUID: ", err)
+	}
+
+	if string(j) != "\""+u.UUID.String()+"\"" {
+		t.Error("Marshaled NullUUID is incorrect: ", string(j))
+	}
+
+	nu := NullUUID{Valid: false}
+	j, err = json.Marshal(nu)
+	if err != nil {
+		t.Error("Couldn't marshal an invalid NullUUID: ", err)
+	}
+
+	if string(j) != "null" {
+		t.Error("Marshaled NullUUID is incorrect: ", string(j))
+	}
+}
+
+func TestUnmarshalNullUUID(t *testing.T) {
+	var u NullUUID
+	err := json.Unmarshal([]byte("null"), &u)
+	if err != nil {
+		t.Error("Couldn't Unmarshal an invalid NullUUID: ", err)
+	}
+
+	if u.Valid != false {
+		t.Error("Unmarshaled NullUUID is valid but shouldn't")
+	}
+
+	err = json.Unmarshal([]byte("\"886313e1-3b8a-5372-9b90-0c9aee199e5d\""), &u)
+	if err != nil {
+		t.Error("Couldn't Unmarshal an invalid NullUUID: ", err)
+	}
+
+	if u.Valid != true || u.UUID.String() != "886313e1-3b8a-5372-9b90-0c9aee199e5d" {
+		t.Error("Unmarshaled NullUUID is incorrect: ", u.Valid, u.UUID)
 	}
 }

@@ -32,6 +32,7 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"hash"
 	"net"
@@ -342,6 +343,29 @@ func (u *NullUUID) Scan(src interface{}) error {
 	// Delegate to UUID Scan function
 	u.Valid = true
 	return u.UUID.Scan(src)
+}
+
+// MarshalJSON marshalls the NullUUID as nil or the nested UUID
+func (u NullUUID) MarshalJSON() ([]byte, error) {
+	if u.Valid == false {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(u.UUID)
+}
+
+// UnmarshalJSON unmarshalls a NullUUID
+func (u *NullUUID) UnmarshalJSON(b []byte) error {
+	if bytes.Equal(b, []byte("null")) {
+		u.UUID, u.Valid = Nil, false
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &u.UUID); err != nil {
+		return err
+	}
+	u.Valid = true
+
+	return nil
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
