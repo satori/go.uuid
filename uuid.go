@@ -60,7 +60,10 @@ const (
 const epochStart = 122192928000000000
 
 // Used in string method conversion
-const dash byte = '-'
+const (
+	dash byte = '-'
+	quotationMark byte = '"'
+)
 
 // UUID v1/v2 storage.
 var (
@@ -220,10 +223,75 @@ func (u *UUID) SetVariant() {
 	u[8] = (u[8] & 0xbf) | 0x80
 }
 
+// MarshalJSON implements the json.Marshaler interface.
+// The encoding is the same as returned by String except the quotation marks are added around.
+func (u UUID) MarshalJSON() (data []byte, err error) {
+	data = make([]byte, 38)
+
+	data[0] = quotationMark
+	hex.Encode(data[1:9], u[0:4])
+	data[9] = dash
+	hex.Encode(data[10:14], u[4:6])
+	data[14] = dash
+	hex.Encode(data[15:19], u[6:8])
+	data[19] = dash
+	hex.Encode(data[20:24], u[8:10])
+	data[24] = dash
+	hex.Encode(data[25:37], u[10:])
+	data[37] = quotationMark
+
+	return
+}
+
 // MarshalText implements the encoding.TextMarshaler interface.
 // The encoding is the same as returned by String.
 func (u UUID) MarshalText() (text []byte, err error) {
 	text = []byte(u.String())
+	return
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+// It works the same as UnmarshalText except the quotation marks are removed if present.
+func (u *UUID) UnmarshalJSON(data []byte) (err error) {
+	if len(data) < 32 {
+		err = fmt.Errorf("uuid: UUID string too short: %s", data)
+		return
+	}
+
+	t := data[:]
+
+	if t[0] == quotationMark {
+		t = t[1:]
+	}
+
+	if bytes.Equal(t[:9], urnPrefix) {
+		t = t[9:]
+	} else if t[0] == '{' {
+		t = t[1:]
+	}
+
+	b := u[:]
+
+	for _, byteGroup := range byteGroups {
+		if t[0] == '-' {
+			t = t[1:]
+		}
+
+		if len(t) < byteGroup {
+			err = fmt.Errorf("uuid: UUID string too short: %s", data)
+			return
+		}
+
+		_, err = hex.Decode(b[:byteGroup/2], t[:byteGroup])
+
+		if err != nil {
+			return
+		}
+
+		t = t[byteGroup:]
+		b = b[byteGroup/2:]
+	}
+
 	return
 }
 
