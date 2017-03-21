@@ -23,6 +23,7 @@ package uuid
 
 import (
 	"testing"
+	"time"
 )
 
 func BenchmarkFromBytes(b *testing.B) {
@@ -56,6 +57,12 @@ func BenchmarkFromStringWithBrackets(b *testing.B) {
 func BenchmarkNewV1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		NewV1()
+	}
+}
+
+func BenchmarkNewV1FromTime(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		NewV1FromTime(time.Now())
 	}
 }
 

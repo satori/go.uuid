@@ -66,10 +66,11 @@ const dash byte = '-'
 var (
 	storageMutex  sync.Mutex
 	storageOnce   sync.Once
-	epochFunc     = unixTimeFunc
+	epochFunc     = unixTimeNowFunc
 	clockSequence uint16
 	lastTime      uint64
 	hardwareAddr  [6]byte
+	emptyAddr     [6]byte
 	posixUID      = uint32(os.Getuid())
 	posixGID      = uint32(os.Getgid())
 )
@@ -119,8 +120,12 @@ func safeRandom(dest []byte) {
 // Returns difference in 100-nanosecond intervals between
 // UUID epoch (October 15, 1582) and current time.
 // This is default epoch calculation function.
-func unixTimeFunc() uint64 {
-	return epochStart + uint64(time.Now().UnixNano()/100)
+func unixTimeFunc(myTime time.Time) uint64 {
+	return epochStart + uint64(myTime.UnixNano()/100)
+}
+
+func unixTimeNowFunc() uint64 {
+	return unixTimeFunc(time.Now());
 }
 
 // UUID representation compliant with specification
@@ -409,6 +414,26 @@ func NewV1() UUID {
 	binary.BigEndian.PutUint16(u[8:], clockSeq)
 
 	copy(u[10:], hardwareAddr)
+
+	u.SetVersion(1)
+	u.SetVariant()
+
+	return u
+}
+
+// NewV1FromTime returns UUID based on the specified timestamp and a constant MAC address.
+func NewV1FromTime(myTime time.Time) UUID {
+	u := UUID{}
+
+	timeNow := unixTimeFunc(myTime)
+	clockSeq := uint16(0)
+
+	binary.BigEndian.PutUint32(u[0:], uint32(timeNow))
+	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
+	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
+	binary.BigEndian.PutUint16(u[8:], clockSeq)
+
+	copy(u[10:], emptyAddr[:])
 
 	u.SetVersion(1)
 	u.SetVariant()
