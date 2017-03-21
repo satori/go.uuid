@@ -28,7 +28,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha512"
 	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
@@ -461,9 +461,9 @@ func NewV4() UUID {
 	return u
 }
 
-// NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
+// NewV5 returns UUID based on SHA-512 hash of namespace UUID and name.
 func NewV5(ns UUID, name string) UUID {
-	u := newFromHash(sha1.New(), ns, name)
+	u := newFromHash(sha512.New(), ns, name)
 	u.SetVersion(5)
 	u.SetVariant()
 
