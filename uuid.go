@@ -229,57 +229,136 @@ func (u UUID) MarshalText() (text []byte, err error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 // Following formats are supported:
-// "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
-// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+//   "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+//   "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+//   "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+//   "6ba7b8109dad11d180b400c04fd430c8"
+// ABNF for supported UUID text representation follows:
+//   uuid := canonical | hashlike | braced | urn
+//   plain := canonical | hashlike
+//   canonical := 4hexoct '-' 2hexoct '-' 2hexoct '-' 6hexoct
+//   hashlike := 12hexoct
+//   braced := '{' plain '}'
+//   urn := URN ':' UUID-NIS ':' plain
+//   URN := 'urn'
+//   UUID-NID := 'uuid'
+//   12hexoct := 6hexoct 6hexoct
+//   6hexoct := 4hexoct 2hexoct
+//   4hexoct := 2hexoct 2hexoct
+//   2hexoct := hexoct hexoct
+//   hexoct := hexdig hexdig
+//   hexdig := '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' |
+//             'a' | 'b' | 'c' | 'd' | 'e' | 'f' |
+//             'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 func (u *UUID) UnmarshalText(text []byte) (err error) {
 	if len(text) < 32 {
 		err = fmt.Errorf("uuid: UUID string too short: %s", text)
 		return
 	}
 
-	t := text[:]
-	braced := false
+	if err := u.decodeCanonical(text); err == nil {
+		return nil
+	} else if err := u.decodeHashLike(text); err == nil {
+		return nil
+	} else if err := u.decodeBraced(text); err == nil {
+		return nil
+	} else if err := u.decodeURN(text); err == nil {
+		return nil
+	} else {
+		return fmt.Errorf("uuid: wrong uuid format")
+	}
+}
 
-	if bytes.Equal(t[:9], urnPrefix) {
-		t = t[9:]
-	} else if t[0] == '{' {
-		braced = true
-		t = t[1:]
+// decodeCanonical decodes UUID string in format
+// "6ba7b810-9dad-11d1-80b4-00c04fd430c8".
+func (u *UUID) decodeCanonical(t []byte) (err error) {
+	if len(t) != 36 {
+		return fmt.Errorf("uuid: it is not canonical format")
 	}
 
-	b := u[:]
-
-	for i, byteGroup := range byteGroups {
-		if i > 0 {
-			if t[0] != '-' {
-				err = fmt.Errorf("uuid: invalid string format")
-				return
-			}
-			t = t[1:]
-		}
-
-		if len(t) < byteGroup {
-			err = fmt.Errorf("uuid: UUID string too short: %s", text)
-			return
-		}
-
-		if i == 4 && len(t) > byteGroup &&
-			((braced && t[byteGroup] != '}') || len(t[byteGroup:]) > 1 || !braced) {
-			err = fmt.Errorf("uuid: UUID string too long: %s", text)
-			return
-		}
-
-		_, err = hex.Decode(b[:byteGroup/2], t[:byteGroup])
-		if err != nil {
-			return
-		}
-
-		t = t[byteGroup:]
-		b = b[byteGroup/2:]
+	if t[8] != '-' || t[13] != '-' || t[18] != '-' || t[23] != '-' {
+		return fmt.Errorf("uuid: it is not canonical format")
 	}
 
-	return
+	src := t[:8]
+	src = append(src, t[9:13]...)
+	src = append(src, t[14:18]...)
+	src = append(src, t[19:23]...)
+	src = append(src, t[24:36]...)
+
+	dst := u[:]
+
+	if _, err = hex.Decode(dst, src); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+// decodeCanonical decodes UUID string in format
+// "6ba7b8109dad11d180b400c04fd430c8"
+func (u *UUID) decodeHashLike(t []byte) (err error) {
+	if len(t) != 32 {
+		return fmt.Errorf("uuid: wrong size of input string")
+	}
+
+	src := t[:]
+	dst := u[:]
+
+	if _, err = hex.Decode(dst, src); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+// decodeCanonical decodes UUID string in format
+// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}".
+func (u *UUID) decodeBraced(t []byte) (err error) {
+	l := len(t)
+
+	if l != 34 && l != 38 {
+		return fmt.Errorf("uuid: wrong size of input string")
+	}
+
+	if t[0] != '{' || t[l-1] != '}' {
+		return fmt.Errorf("uuid: it is not braced format")
+	}
+
+	return u.decodePlain(t[1 : l-1])
+}
+
+// decodeCanonical decodes UUID string in format
+// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+func (u *UUID) decodeURN(t []byte) (err error) {
+	total := len(t)
+	nss := total - 9 // length of nss
+
+	if nss != 32 && nss != 36 {
+		return fmt.Errorf("uuid: wrong size of input string")
+	}
+
+	// TODO: should be 'urn:uuid:' case-insensitive
+	urn_uuid_prefix := t[:9]
+
+	if !bytes.Equal(urn_uuid_prefix, urnPrefix) {
+		return fmt.Errorf("uuid: it is not URN format")
+	}
+
+	return u.decodePlain(t[9:total])
+}
+
+// decodeCanonical decodes UUID string in canonical format
+// "6ba7b810-9dad-11d1-80b4-00c04fd430c8" or in hash-like format
+// "6ba7b8109dad11d180b400c04fd430c8".
+func (u *UUID) decodePlain(t []byte) (err error) {
+	if err := u.decodeCanonical(t); err == nil {
+		return nil
+	} else if err := u.decodeHashLike(t); err != nil {
+		return nil
+	} else {
+		return fmt.Errorf("uuid: it is not braced format")
+	}
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
