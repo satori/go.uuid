@@ -251,21 +251,25 @@ func (u UUID) MarshalText() (text []byte, err error) {
 //             'a' | 'b' | 'c' | 'd' | 'e' | 'f' |
 //             'A' | 'B' | 'C' | 'D' | 'E' | 'F'
 func (u *UUID) UnmarshalText(text []byte) (err error) {
-	if len(text) < 32 {
-		err = fmt.Errorf("uuid: UUID string too short: %s", text)
-		return
+	switch len(text) {
+	case 32:
+		return u.decodeHashLike(text)
+	case 36:
+		return u.decodeCanonical(text)
+	case 38:
+		return u.decodeBraced(text)
+	case 41:
+		fallthrough
+	case 45:
+		return u.decodeURN(text)
 	}
 
-	if err := u.decodeCanonical(text); err == nil {
-		return nil
-	} else if err := u.decodeHashLike(text); err == nil {
-		return nil
-	} else if err := u.decodeBraced(text); err == nil {
-		return nil
-	} else if err := u.decodeURN(text); err == nil {
-		return nil
+	if len(text) < 32 {
+		return fmt.Errorf("uuid: UUID string too short: %s", text)
+	} else if len(text) > 45 {
+		return fmt.Errorf("uuid: UUID string too long: %s", text)
 	} else {
-		return fmt.Errorf("uuid: wrong uuid format")
+		return fmt.Errorf("uuid: wrong length of UUID string: %s", text)
 	}
 }
 
