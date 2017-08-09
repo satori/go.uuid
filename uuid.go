@@ -295,8 +295,8 @@ func (u *UUID) decodeCanonical(t []byte) (err error) {
 	}
 }
 
-// decodeCanonical decodes UUID string in format
-// "6ba7b8109dad11d180b400c04fd430c8"
+// decodeHashLike decodes UUID string in format
+// "6ba7b8109dad11d180b400c04fd430c8".
 func (u *UUID) decodeHashLike(t []byte) (err error) {
 	src := t[:]
 	dst := u[:]
@@ -308,8 +308,9 @@ func (u *UUID) decodeHashLike(t []byte) (err error) {
 	}
 }
 
-// decodeCanonical decodes UUID string in format
-// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}".
+// decodeBraced decodes UUID string in format
+// "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}" or in format
+// "{6ba7b8109dad11d180b400c04fd430c8}".
 func (u *UUID) decodeBraced(t []byte) (err error) {
 	l := len(t)
 
@@ -320,8 +321,9 @@ func (u *UUID) decodeBraced(t []byte) (err error) {
 	return u.decodePlain(t[1 : l-1])
 }
 
-// decodeCanonical decodes UUID string in format
-// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+// decodeURN decodes UUID string in format
+// "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8" or in format
+// "urn:uuid:6ba7b8109dad11d180b400c04fd430c8".
 func (u *UUID) decodeURN(t []byte) (err error) {
 	total := len(t)
 
@@ -335,7 +337,7 @@ func (u *UUID) decodeURN(t []byte) (err error) {
 	return u.decodePlain(t[9:total])
 }
 
-// decodeCanonical decodes UUID string in canonical format
+// decodePlain decodes UUID string in canonical format
 // "6ba7b810-9dad-11d1-80b4-00c04fd430c8" or in hash-like format
 // "6ba7b8109dad11d180b400c04fd430c8".
 func (u *UUID) decodePlain(t []byte) (err error) {
