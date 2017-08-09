@@ -276,10 +276,6 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 // decodeCanonical decodes UUID string in format
 // "6ba7b810-9dad-11d1-80b4-00c04fd430c8".
 func (u *UUID) decodeCanonical(t []byte) (err error) {
-	if len(t) != 36 {
-		return fmt.Errorf("uuid: it is not canonical format")
-	}
-
 	if t[8] != '-' || t[13] != '-' || t[18] != '-' || t[23] != '-' {
 		return fmt.Errorf("uuid: it is not canonical format")
 	}
@@ -302,10 +298,6 @@ func (u *UUID) decodeCanonical(t []byte) (err error) {
 // decodeCanonical decodes UUID string in format
 // "6ba7b8109dad11d180b400c04fd430c8"
 func (u *UUID) decodeHashLike(t []byte) (err error) {
-	if len(t) != 32 {
-		return fmt.Errorf("uuid: wrong size of input string")
-	}
-
 	src := t[:]
 	dst := u[:]
 
@@ -321,10 +313,6 @@ func (u *UUID) decodeHashLike(t []byte) (err error) {
 func (u *UUID) decodeBraced(t []byte) (err error) {
 	l := len(t)
 
-	if l != 34 && l != 38 {
-		return fmt.Errorf("uuid: wrong size of input string")
-	}
-
 	if t[0] != '{' || t[l-1] != '}' {
 		return fmt.Errorf("uuid: it is not braced format")
 	}
@@ -336,11 +324,6 @@ func (u *UUID) decodeBraced(t []byte) (err error) {
 // "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 func (u *UUID) decodeURN(t []byte) (err error) {
 	total := len(t)
-	nss := total - 9 // length of nss
-
-	if nss != 32 && nss != 36 {
-		return fmt.Errorf("uuid: wrong size of input string")
-	}
 
 	// TODO: should be 'urn:uuid:' case-insensitive
 	urn_uuid_prefix := t[:9]
@@ -356,13 +339,16 @@ func (u *UUID) decodeURN(t []byte) (err error) {
 // "6ba7b810-9dad-11d1-80b4-00c04fd430c8" or in hash-like format
 // "6ba7b8109dad11d180b400c04fd430c8".
 func (u *UUID) decodePlain(t []byte) (err error) {
-	if err := u.decodeCanonical(t); err == nil {
-		return nil
-	} else if err := u.decodeHashLike(t); err != nil {
-		return nil
-	} else {
-		return fmt.Errorf("uuid: it is not braced format")
+	switch len(t) {
+	case 32:
+		err = u.decodeHashLike(t)
+	case 36:
+		err = u.decodeCanonical(t)
+	default:
+		err = fmt.Errorf("uuid: wrong length for plain format")
 	}
+
+	return
 }
 
 // MarshalBinary implements the encoding.BinaryMarshaler interface.
