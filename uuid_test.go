@@ -42,6 +42,12 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestStringStrip(t *testing.T) {
+	if NamespaceDNS.StringStrip() != "6ba7b8109dad11d180b400c04fd430c8" {
+		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.StringStrip())
+	}
+}
+
 func TestEqual(t *testing.T) {
 	if !Equal(NamespaceDNS, NamespaceDNS) {
 		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
