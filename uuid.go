@@ -243,6 +243,7 @@ func (u UUID) MarshalText() (text []byte, err error) {
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 // Following formats are supported:
+// "6ba7b8109dad11d180b400c04fd430c8",
 // "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
 // "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 // "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
@@ -254,6 +255,7 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 
 	t := text[:]
 	braced := false
+	dashes := 0
 
 	if bytes.Equal(t[:9], urnPrefix) {
 		t = t[9:]
@@ -266,11 +268,10 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 
 	for i, byteGroup := range byteGroups {
 		if i > 0 {
-			if t[0] != '-' {
-				err = fmt.Errorf("uuid: invalid string format")
-				return
+			if t[0] == '-' {
+				dashes++
+				t = t[1:]
 			}
-			t = t[1:]
 		}
 
 		if len(t) < byteGroup {
@@ -281,6 +282,11 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 		if i == 4 && len(t) > byteGroup &&
 			((braced && t[byteGroup] != '}') || len(t[byteGroup:]) > 1 || !braced) {
 			err = fmt.Errorf("uuid: UUID string too long: %s", text)
+			return
+		}
+
+		if i == 4 && (dashes != 0 && dashes != 4) {
+			err = fmt.Errorf("uuid: UUID string invalid: %s", text)
 			return
 		}
 
