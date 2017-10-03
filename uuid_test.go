@@ -42,6 +42,12 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestStringWithoutDashes(t *testing.T) {
+	if NamespaceDNS.StringWithoutDashes() != "6ba7b8109dad11d180b400c04fd430c8" {
+		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.StringWithoutDashes())
+	}
+}
+
 func TestEqual(t *testing.T) {
 	if !Equal(NamespaceDNS, NamespaceDNS) {
 		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
