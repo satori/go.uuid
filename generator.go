@@ -24,10 +24,10 @@
 // version 2 (as specified in DCE 1.1).
 package uuid
 
-// Generator can create any type od UUID.
+// Generator can create any type of UUID.
 type Generator interface {
 	NewV1() UUID
-	NewV2(domaing byte) UUID
+	NewV2(domain byte) UUID
 	NewV3(ns UUID, name string) UUID
 	NewV4() UUID
 	NewV5(ns UUID, name string) UUID
