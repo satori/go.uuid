@@ -26,18 +26,9 @@ package uuid
 
 import (
 	"bytes"
-	"crypto/md5"
-	"crypto/rand"
-	"crypto/sha1"
 	"database/sql/driver"
-	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"hash"
-	"net"
-	"os"
-	"sync"
-	"time"
 )
 
 // UUID layout variants.
@@ -62,66 +53,11 @@ const epochStart = 122192928000000000
 // Used in string method conversion
 const dash byte = '-'
 
-// UUID v1/v2 storage.
-var (
-	storageMutex  sync.Mutex
-	storageOnce   sync.Once
-	epochFunc     = unixTimeFunc
-	clockSequence uint16
-	lastTime      uint64
-	hardwareAddr  [6]byte
-	posixUID      = uint32(os.Getuid())
-	posixGID      = uint32(os.Getgid())
-)
-
 // String parse helpers.
 var (
 	urnPrefix  = []byte("urn:uuid:")
 	byteGroups = []int{8, 4, 4, 4, 12}
 )
-
-func initClockSequence() {
-	buf := make([]byte, 2)
-	safeRandom(buf)
-	clockSequence = binary.BigEndian.Uint16(buf)
-}
-
-func initHardwareAddr() {
-	interfaces, err := net.Interfaces()
-	if err == nil {
-		for _, iface := range interfaces {
-			if len(iface.HardwareAddr) >= 6 {
-				copy(hardwareAddr[:], iface.HardwareAddr)
-				return
-			}
-		}
-	}
-
-	// Initialize hardwareAddr randomly in case
-	// of real network interfaces absence
-	safeRandom(hardwareAddr[:])
-
-	// Set multicast bit as recommended in RFC 4122
-	hardwareAddr[0] |= 0x01
-}
-
-func initStorage() {
-	initClockSequence()
-	initHardwareAddr()
-}
-
-func safeRandom(dest []byte) {
-	if _, err := rand.Read(dest); err != nil {
-		panic(err)
-	}
-}
-
-// Returns difference in 100-nanosecond intervals between
-// UUID epoch (October 15, 1582) and current time.
-// This is default epoch calculation function.
-func unixTimeFunc() uint64 {
-	return epochStart + uint64(time.Now().UnixNano()/100)
-}
 
 // UUID representation compliant with specification
 // described in RFC 4122.
@@ -134,7 +70,7 @@ type NullUUID struct {
 	Valid bool
 }
 
-// The nil UUID is special form of UUID that is specified to have all
+// Nil is special form of UUID that is specified to have all
 // 128 bits set to zero.
 var Nil = UUID{}
 
@@ -376,106 +312,4 @@ func FromStringOrNil(input string) UUID {
 		return Nil
 	}
 	return uuid
-}
-
-// Returns UUID v1/v2 storage state.
-// Returns epoch timestamp, clock sequence, and hardware address.
-func getStorage() (uint64, uint16, []byte) {
-	storageOnce.Do(initStorage)
-
-	storageMutex.Lock()
-	defer storageMutex.Unlock()
-
-	timeNow := epochFunc()
-	// Clock changed backwards since last UUID generation.
-	// Should increase clock sequence.
-	if timeNow <= lastTime {
-		clockSequence++
-	}
-	lastTime = timeNow
-
-	return timeNow, clockSequence, hardwareAddr[:]
-}
-
-// NewV1 returns UUID based on current timestamp and MAC address.
-func NewV1() UUID {
-	u := UUID{}
-
-	timeNow, clockSeq, hardwareAddr := getStorage()
-
-	binary.BigEndian.PutUint32(u[0:], uint32(timeNow))
-	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
-	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
-	binary.BigEndian.PutUint16(u[8:], clockSeq)
-
-	copy(u[10:], hardwareAddr)
-
-	u.SetVersion(1)
-	u.SetVariant()
-
-	return u
-}
-
-// NewV2 returns DCE Security UUID based on POSIX UID/GID.
-func NewV2(domain byte) UUID {
-	u := UUID{}
-
-	timeNow, clockSeq, hardwareAddr := getStorage()
-
-	switch domain {
-	case DomainPerson:
-		binary.BigEndian.PutUint32(u[0:], posixUID)
-	case DomainGroup:
-		binary.BigEndian.PutUint32(u[0:], posixGID)
-	}
-
-	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
-	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
-	binary.BigEndian.PutUint16(u[8:], clockSeq)
-	u[9] = domain
-
-	copy(u[10:], hardwareAddr)
-
-	u.SetVersion(2)
-	u.SetVariant()
-
-	return u
-}
-
-// NewV3 returns UUID based on MD5 hash of namespace UUID and name.
-func NewV3(ns UUID, name string) UUID {
-	u := newFromHash(md5.New(), ns, name)
-	u.SetVersion(3)
-	u.SetVariant()
-
-	return u
-}
-
-// NewV4 returns random generated UUID.
-func NewV4() UUID {
-	u := UUID{}
-	safeRandom(u[:])
-	u.SetVersion(4)
-	u.SetVariant()
-
-	return u
-}
-
-// NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
-func NewV5(ns UUID, name string) UUID {
-	u := newFromHash(sha1.New(), ns, name)
-	u.SetVersion(5)
-	u.SetVariant()
-
-	return u
-}
-
-// Returns UUID based on hashing of namespace UUID and name.
-func newFromHash(h hash.Hash, ns UUID, name string) UUID {
-	u := UUID{}
-	h.Write(ns[:])
-	h.Write([]byte(name))
-	copy(u[:], h.Sum(nil))
-
-	return u
 }
