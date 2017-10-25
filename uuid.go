@@ -64,14 +64,16 @@ const dash byte = '-'
 
 // UUID v1/v2 storage.
 var (
-	storageMutex  sync.Mutex
-	storageOnce   sync.Once
-	epochFunc     = unixTimeFunc
-	clockSequence uint16
-	lastTime      uint64
-	hardwareAddr  [6]byte
-	posixUID      = uint32(os.Getuid())
-	posixGID      = uint32(os.Getgid())
+	storageMutex              sync.Mutex
+	storageOnce               sync.Once
+	storageRandomMACAddrMutex sync.Mutex
+	storageRandomMACAddrOnce  sync.Once
+	epochFunc                 = unixTimeFunc
+	clockSequence             uint16
+	lastTime                  uint64
+	hardwareAddr              [6]byte
+	posixUID                  = uint32(os.Getuid())
+	posixGID                  = uint32(os.Getgid())
 )
 
 // String parse helpers.
@@ -105,9 +107,12 @@ func initHardwareAddr() {
 	hardwareAddr[0] |= 0x01
 }
 
-func initStorage() {
-	initClockSequence()
-	initHardwareAddr()
+func initHardwareRandomAddr() {
+	// Initialize hardwareAddr randomly
+	safeRandom(hardwareAddr[:])
+
+	// Set multicast bit as recommended in RFC 4122
+	hardwareAddr[0] |= 0x01
 }
 
 func safeRandom(dest []byte) {
@@ -378,6 +383,16 @@ func FromStringOrNil(input string) UUID {
 	return uuid
 }
 
+func initStorage() {
+	initClockSequence()
+	initHardwareAddr()
+}
+
+func initStorageRandomAddr() {
+	initClockSequence()
+	initHardwareRandomAddr()
+}
+
 // Returns UUID v1/v2 storage state.
 // Returns epoch timestamp, clock sequence, and hardware address.
 func getStorage() (uint64, uint16, []byte) {
@@ -397,31 +412,63 @@ func getStorage() (uint64, uint16, []byte) {
 	return timeNow, clockSequence, hardwareAddr[:]
 }
 
+// Returns UUID v1/v2 storage state.
+// Returns epoch timestamp, clock sequence, and a random hardware address.
+func getStorageRandomAddr() (uint64, uint16, []byte) {
+	storageRandomMACAddrOnce.Do(initStorageRandomAddr)
+
+	storageRandomMACAddrMutex.Lock()
+	defer storageRandomMACAddrMutex.Unlock()
+
+	timeNow := epochFunc()
+	// Clock changed backwards since last UUID generation.
+	// Should increase clock sequence.
+	if timeNow <= lastTime {
+		clockSequence++
+	}
+	lastTime = timeNow
+
+	return timeNow, clockSequence, hardwareAddr[:]
+}
+
 // NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
-	u := UUID{}
-
 	timeNow, clockSeq, hardwareAddr := getStorage()
+	return buildV1(timeNow, clockSeq, hardwareAddr)
+}
 
+// NewV1RandomMAC returns UUID based on current timestamp and a random MAC address.
+func NewV1RandomMAC() UUID {
+	timeNow, clockSeq, hardwareAddr := getStorageRandomAddr()
+	return buildV1(timeNow, clockSeq, hardwareAddr)
+}
+
+func buildV1(timeNow uint64, clockSeq uint16, hardwareAddr []byte) UUID {
+	u := UUID{}
 	binary.BigEndian.PutUint32(u[0:], uint32(timeNow))
 	binary.BigEndian.PutUint16(u[4:], uint16(timeNow>>32))
 	binary.BigEndian.PutUint16(u[6:], uint16(timeNow>>48))
 	binary.BigEndian.PutUint16(u[8:], clockSeq)
-
 	copy(u[10:], hardwareAddr)
-
 	u.SetVersion(1)
 	u.SetVariant()
-
 	return u
 }
 
 // NewV2 returns DCE Security UUID based on POSIX UID/GID.
 func NewV2(domain byte) UUID {
-	u := UUID{}
-
 	timeNow, clockSeq, hardwareAddr := getStorage()
+	return buildV2(domain, timeNow, clockSeq, hardwareAddr)
+}
 
+// NewV2RandomMAC returns DCE Security UUID based on POSIX UID/GID using a random MAC
+func NewV2RandomMAC(domain byte) UUID {
+	timeNow, clockSeq, hardwareAddr := getStorageRandomAddr()
+	return buildV2(domain, timeNow, clockSeq, hardwareAddr)
+}
+
+func buildV2(domain byte, timeNow uint64, clockSeq uint16, hardwareAddr []byte) UUID {
+	u := UUID{}
 	switch domain {
 	case DomainPerson:
 		binary.BigEndian.PutUint32(u[0:], posixUID)
@@ -438,7 +485,6 @@ func NewV2(domain byte) UUID {
 
 	u.SetVersion(2)
 	u.SetVariant()
-
 	return u
 }
 
