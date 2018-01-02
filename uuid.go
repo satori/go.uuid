@@ -213,6 +213,12 @@ func (u UUID) String() string {
 	return string(buf)
 }
 
+// Returns string representation of UUID without dashes:
+// xxxxxxxx(-)xxxx(-)xxxx(-)xxxx(-)xxxxxxxxxxxx.
+func (u UUID) StringWithoutDashes() string {
+	return hex.EncodeToString(u.Bytes())
+}
+
 // SetVersion sets version bits.
 func (u *UUID) SetVersion(v byte) {
 	u[6] = (u[6] & 0x0f) | (v << 4)
