@@ -40,6 +40,9 @@ import (
 	"time"
 )
 
+// Size of a UUID in bytes.
+const Size = 16
+
 // UUID layout variants.
 const (
 	VariantNCS = iota
@@ -125,7 +128,7 @@ func unixTimeFunc() uint64 {
 
 // UUID representation compliant with specification
 // described in RFC 4122.
-type UUID [16]byte
+type UUID [Size]byte
 
 // NullUUID can be used with the standard sql package to represent a
 // UUID value that can be NULL in the database
@@ -149,7 +152,7 @@ var (
 // And returns result of binary AND of two UUIDs.
 func And(u1 UUID, u2 UUID) UUID {
 	u := UUID{}
-	for i := 0; i < 16; i++ {
+	for i := 0; i < Size; i++ {
 		u[i] = u1[i] & u2[i]
 	}
 	return u
@@ -158,7 +161,7 @@ func And(u1 UUID, u2 UUID) UUID {
 // Or returns result of binary OR of two UUIDs.
 func Or(u1 UUID, u2 UUID) UUID {
 	u := UUID{}
-	for i := 0; i < 16; i++ {
+	for i := 0; i < Size; i++ {
 		u[i] = u1[i] | u2[i]
 	}
 	return u
@@ -291,7 +294,7 @@ func (u UUID) MarshalBinary() (data []byte, err error) {
 // UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
 // It will return error if the slice isn't 16 bytes long.
 func (u *UUID) UnmarshalBinary(data []byte) (err error) {
-	if len(data) != 16 {
+	if len(data) != Size {
 		err = fmt.Errorf("uuid: UUID must be exactly 16 bytes long, got %d bytes", len(data))
 		return
 	}
@@ -311,7 +314,7 @@ func (u UUID) Value() (driver.Value, error) {
 func (u *UUID) Scan(src interface{}) error {
 	switch src := src.(type) {
 	case []byte:
-		if len(src) == 16 {
+		if len(src) == Size {
 			return u.UnmarshalBinary(src)
 		}
 		return u.UnmarshalText(src)
