@@ -23,6 +23,7 @@ package uuid
 
 import (
 	"bytes"
+	"net"
 	"testing"
 )
 
@@ -550,6 +551,45 @@ func TestNewV1(t *testing.T) {
 	epochFunc = oldFunc
 }
 
+func TestNewV1RandomMAC(t *testing.T) {
+	u := NewV1RandomMAC()
+
+	if u.Version() != 1 {
+		t.Errorf("UUIDv1 generated with incorrect version: %d", u.Version())
+	}
+
+	if u.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv1 generated with incorrect variant: %d", u.Variant())
+	}
+
+	u1 := NewV1RandomMAC()
+	u2 := NewV1RandomMAC()
+
+	if Equal(u1, u2) {
+		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u1, u2)
+	}
+
+	oldFunc := epochFunc
+	epochFunc = func() uint64 { return 0 }
+
+	u3 := NewV1RandomMAC()
+	u4 := NewV1RandomMAC()
+
+	if Equal(u3, u4) {
+		t.Errorf("UUIDv1 generated two equal UUIDs: %s and %s", u3, u4)
+	}
+
+	epochFunc = oldFunc
+
+	u5 := NewV1RandomMAC().Bytes()
+	u5MACAddr := u5[10:]
+	firstNetworkCardAddress := getNetworkCardAddress()
+
+	if bytes.Equal(u5MACAddr, firstNetworkCardAddress) {
+		t.Errorf("UUIDv1 generated two equal MAC addresses when should be random: %v and %v", u5MACAddr, firstNetworkCardAddress)
+	}
+}
+
 func TestNewV2(t *testing.T) {
 	u1 := NewV2(DomainPerson)
 
@@ -569,6 +609,36 @@ func TestNewV2(t *testing.T) {
 
 	if u2.Variant() != VariantRFC4122 {
 		t.Errorf("UUIDv2 generated with incorrect variant: %d", u2.Variant())
+	}
+}
+
+func TestNewV2RandomMAC(t *testing.T) {
+	u1 := NewV2RandomMAC(DomainPerson)
+
+	if u1.Version() != 2 {
+		t.Errorf("UUIDv2 generated with incorrect version: %d", u1.Version())
+	}
+
+	if u1.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv2 generated with incorrect variant: %d", u1.Variant())
+	}
+
+	u2 := NewV2RandomMAC(DomainGroup)
+
+	if u2.Version() != 2 {
+		t.Errorf("UUIDv2 generated with incorrect version: %d", u2.Version())
+	}
+
+	if u2.Variant() != VariantRFC4122 {
+		t.Errorf("UUIDv2 generated with incorrect variant: %d", u2.Variant())
+	}
+
+	u3 := NewV2RandomMAC(DomainPerson).Bytes()
+	u3MACAddr := u3[10:]
+	firstNetworkCardAddress := getNetworkCardAddress()
+
+	if bytes.Equal(u3MACAddr, firstNetworkCardAddress) {
+		t.Errorf("UUIDv2 generated two equal MAC addresses when should be random: %v and %v", u3MACAddr, firstNetworkCardAddress)
 	}
 }
 
@@ -654,4 +724,16 @@ func TestNewV5(t *testing.T) {
 	if Equal(u1, u4) {
 		t.Errorf("UUIDv3 generated same UUIDs for sane names in different namespaces: %s and %s", u1, u4)
 	}
+}
+
+func getNetworkCardAddress() []byte {
+	interfaces, err := net.Interfaces()
+	if err == nil {
+		for _, iface := range interfaces {
+			if len(iface.HardwareAddr) >= 6 {
+				return iface.HardwareAddr
+			}
+		}
+	}
+	return []byte{}
 }
