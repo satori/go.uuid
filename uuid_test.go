@@ -42,6 +42,12 @@ func TestString(t *testing.T) {
 	}
 }
 
+func TestStringStrip(t *testing.T) {
+	if NamespaceDNS.StringStrip() != "6ba7b8109dad11d180b400c04fd430c8" {
+		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.StringStrip())
+	}
+}
+
 func TestEqual(t *testing.T) {
 	if !Equal(NamespaceDNS, NamespaceDNS) {
 		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
@@ -187,6 +193,7 @@ func TestUnmarshalBinary(t *testing.T) {
 func TestFromString(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
+	s0 := "6ba7b8109dad11d180b400c04fd430c8"
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 	s2 := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
 	s3 := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
@@ -194,6 +201,15 @@ func TestFromString(t *testing.T) {
 	_, err := FromString("")
 	if err == nil {
 		t.Errorf("Should return error trying to parse empty string, got %s", err)
+	}
+
+	u0, err := FromString(s0)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u0) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u0)
 	}
 
 	u1, err := FromString(s1)
@@ -256,7 +272,6 @@ func TestFromStringLong(t *testing.T) {
 func TestFromStringInvalid(t *testing.T) {
 	// Invalid UUID string formats
 	s := []string{
-		"6ba7b8109dad11d180b400c04fd430c8",
 		"6ba7b8109dad11d180b400c04fd430c86ba7b8109dad11d180b400c04fd430c8",
 		"urn:uuid:{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 		"6ba7b8109-dad-11d1-80b4-00c04fd430c8",
