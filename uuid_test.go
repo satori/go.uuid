@@ -190,6 +190,8 @@ func TestFromString(t *testing.T) {
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 	s2 := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
 	s3 := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	s4 := "6ba7b8109dad11d180b400c04fd430c8"
+	s5 := "urn:uuid:6ba7b8109dad11d180b400c04fd430c8"
 
 	_, err := FromString("")
 	if err == nil {
@@ -221,6 +223,24 @@ func TestFromString(t *testing.T) {
 
 	if !Equal(u, u3) {
 		t.Errorf("UUIDs should be equal: %s and %s", u, u3)
+	}
+
+	u4, err := FromString(s4)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u4) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u4)
+	}
+
+	u5, err := FromString(s5)
+	if err != nil {
+		t.Errorf("Error parsing UUID from string: %s", err)
+	}
+
+	if !Equal(u, u5) {
+		t.Errorf("UUIDs should be equal: %s and %s", u, u5)
 	}
 }
 
@@ -256,14 +276,18 @@ func TestFromStringLong(t *testing.T) {
 func TestFromStringInvalid(t *testing.T) {
 	// Invalid UUID string formats
 	s := []string{
-		"6ba7b8109dad11d180b400c04fd430c8",
 		"6ba7b8109dad11d180b400c04fd430c86ba7b8109dad11d180b400c04fd430c8",
 		"urn:uuid:{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+		"uuid:urn:6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+		"uuid:urn:6ba7b8109dad11d180b400c04fd430c8",
 		"6ba7b8109-dad-11d1-80b4-00c04fd430c8",
 		"6ba7b810-9dad1-1d1-80b4-00c04fd430c8",
 		"6ba7b810-9dad-11d18-0b4-00c04fd430c8",
 		"6ba7b810-9dad-11d1-80b40-0c04fd430c8",
 		"6ba7b810+9dad+11d1+80b4+00c04fd430c8",
+		"(6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
+		"{6ba7b810-9dad-11d1-80b4-00c04fd430c8>",
+		"zba7b810-9dad-11d1-80b4-00c04fd430c8",
 		"6ba7b810-9dad11d180b400c04fd430c8",
 		"6ba7b8109dad-11d180b400c04fd430c8",
 		"6ba7b8109dad11d1-80b400c04fd430c8",
