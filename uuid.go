@@ -26,7 +26,6 @@ package uuid
 
 import (
 	"bytes"
-	"database/sql/driver"
 	"encoding/hex"
 	"fmt"
 )
@@ -61,13 +60,6 @@ var (
 // UUID representation compliant with specification
 // described in RFC 4122.
 type UUID [Size]byte
-
-// NullUUID can be used with the standard sql package to represent a
-// UUID value that can be NULL in the database
-type NullUUID struct {
-	UUID  UUID
-	Valid bool
-}
 
 // Nil is special form of UUID that is specified to have all
 // 128 bits set to zero.
@@ -231,7 +223,7 @@ func (u *UUID) decodeBraced(t []byte) (err error) {
 		return fmt.Errorf("uuid: incorrect UUID format %s", t)
 	}
 
-	return u.decodePlain(t[1:l-1])
+	return u.decodePlain(t[1 : l-1])
 }
 
 // decodeURN decodes UUID string in format
@@ -279,50 +271,6 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	copy(u[:], data)
 
 	return
-}
-
-// Value implements the driver.Valuer interface.
-func (u UUID) Value() (driver.Value, error) {
-	return u.String(), nil
-}
-
-// Scan implements the sql.Scanner interface.
-// A 16-byte slice is handled by UnmarshalBinary, while
-// a longer byte slice or a string is handled by UnmarshalText.
-func (u *UUID) Scan(src interface{}) error {
-	switch src := src.(type) {
-	case []byte:
-		if len(src) == Size {
-			return u.UnmarshalBinary(src)
-		}
-		return u.UnmarshalText(src)
-
-	case string:
-		return u.UnmarshalText([]byte(src))
-	}
-
-	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
-}
-
-// Value implements the driver.Valuer interface.
-func (u NullUUID) Value() (driver.Value, error) {
-	if !u.Valid {
-		return nil, nil
-	}
-	// Delegate to UUID Value function
-	return u.UUID.Value()
-}
-
-// Scan implements the sql.Scanner interface.
-func (u *NullUUID) Scan(src interface{}) error {
-	if src == nil {
-		u.UUID, u.Valid = Nil, false
-		return nil
-	}
-
-	// Delegate to UUID Scan function
-	u.Valid = true
-	return u.UUID.Scan(src)
 }
 
 // FromBytes returns UUID converted from raw byte slice input.
