@@ -149,24 +149,6 @@ var (
 	NamespaceX500, _ = FromString("6ba7b814-9dad-11d1-80b4-00c04fd430c8")
 )
 
-// And returns result of binary AND of two UUIDs.
-func And(u1 UUID, u2 UUID) UUID {
-	u := UUID{}
-	for i := 0; i < Size; i++ {
-		u[i] = u1[i] & u2[i]
-	}
-	return u
-}
-
-// Or returns result of binary OR of two UUIDs.
-func Or(u1 UUID, u2 UUID) UUID {
-	u := UUID{}
-	for i := 0; i < Size; i++ {
-		u[i] = u1[i] | u2[i]
-	}
-	return u
-}
-
 // Equal returns true if u1 and u2 equals, otherwise returns false.
 func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
