@@ -38,12 +38,50 @@ func (s *genTestSuite) TestNewV1(c *C) {
 	u2 := NewV1()
 	c.Assert(u1, Not(Equals), u2)
 
+	n1, err := u1.Nanos()
+	if err != nil {
+		c.Errorf("UUIDv1 Nanos error: %s %v", u1, err)
+	}
+	n2, err := u2.Nanos()
+	if err != nil {
+		c.Errorf("UUIDv1 Nanos error: %s %v", u2, err)
+	}
+
+	if n1 > n2 {
+		c.Errorf("UUIDv1 generated older UUID: %s > %s", u1, u2)
+	}
+
+	t1, err := u1.Time()
+	if err != nil {
+		c.Errorf("UUIDv1 Time error: %s %v", u1, err)
+	}
+	t2, err := u2.Time()
+	if err != nil {
+		c.Errorf("UUIDv1 Time error: %s %v", u2, err)
+	}
+	if t1.After(t2) {
+		c.Errorf("UUIDv1 time comparison failed: %s (%s) > %s (%s)", u1, t1, u2, t2)
+	}
+
 	oldFunc := epochFunc
 	epochFunc = func() uint64 { return 0 }
 
 	u3 := NewV1()
 	u4 := NewV1()
 	c.Assert(u3, Not(Equals), u4)
+
+	n3, err := u3.Nanos()
+	if err != nil {
+		c.Errorf("UUIDv1 Nanos error: %s %v", u3, err)
+	}
+	n4, err := u4.Nanos()
+	if err != nil {
+		c.Errorf("UUIDv1 Nanos error: %s %v", u4, err)
+	}
+
+	if n3 != n4 {
+		c.Errorf("UUIDv1 nanos expected equal: %s (%d) and %s (%d)", u3, n3, u4, n4)
+	}
 
 	epochFunc = oldFunc
 }
@@ -130,5 +168,19 @@ func (s *genTestSuite) TestNewV5(c *C) {
 func (s *genTestSuite) BenchmarkNewV5(c *C) {
 	for i := 0; i < c.N; i++ {
 		NewV5(NamespaceDNS, "www.example.com")
+	}
+}
+
+func (s *genTestSuite) TestTimeErrors(c *C) {
+	u := NewV2(DomainPerson)
+
+	_, err := u.Time()
+	if err == nil {
+		c.Errorf("Expected error from V2 UUID: %s", u)
+	}
+
+	_, err = u.Nanos()
+	if err == nil {
+		c.Errorf("Expected error from V2 UUID: %s", u)
 	}
 }
