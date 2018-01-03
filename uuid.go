@@ -32,9 +32,23 @@ import (
 // Size of a UUID in bytes.
 const Size = 16
 
+// UUID representation compliant with specification
+// described in RFC 4122.
+type UUID [Size]byte
+
+// UUID versions
+const (
+	_ byte = iota
+	V1
+	V2
+	V3
+	V4
+	V5
+)
+
 // UUID layout variants.
 const (
-	VariantNCS = iota
+	VariantNCS byte = iota
 	VariantRFC4122
 	VariantMicrosoft
 	VariantFuture
@@ -52,10 +66,6 @@ var (
 	urnPrefix  = []byte("urn:uuid:")
 	byteGroups = []int{8, 4, 4, 4, 12}
 )
-
-// UUID representation compliant with specification
-// described in RFC 4122.
-type UUID [Size]byte
 
 // Nil is special form of UUID that is specified to have all
 // 128 bits set to zero.
@@ -75,12 +85,12 @@ func Equal(u1 UUID, u2 UUID) bool {
 }
 
 // Version returns algorithm version used to generate UUID.
-func (u UUID) Version() uint {
-	return uint(u[6] >> 4)
+func (u UUID) Version() byte {
+	return u[6] >> 4
 }
 
 // Variant returns UUID layout variant.
-func (u UUID) Variant() uint {
+func (u UUID) Variant() byte {
 	switch {
 	case (u[8] & 0x80) == 0x00:
 		return VariantNCS

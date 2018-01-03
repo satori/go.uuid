@@ -106,7 +106,7 @@ func (g *generator) NewV1() UUID {
 
 	copy(u[10:], hardwareAddr)
 
-	u.SetVersion(1)
+	u.SetVersion(V1)
 	u.SetVariant()
 
 	return u
@@ -132,7 +132,7 @@ func (g *generator) NewV2(domain byte) UUID {
 
 	copy(u[10:], hardwareAddr)
 
-	u.SetVersion(2)
+	u.SetVersion(V2)
 	u.SetVariant()
 
 	return u
@@ -141,7 +141,7 @@ func (g *generator) NewV2(domain byte) UUID {
 // NewV3 returns UUID based on MD5 hash of namespace UUID and name.
 func (g *generator) NewV3(ns UUID, name string) UUID {
 	u := newFromHash(md5.New(), ns, name)
-	u.SetVersion(3)
+	u.SetVersion(V3)
 	u.SetVariant()
 
 	return u
@@ -151,7 +151,7 @@ func (g *generator) NewV3(ns UUID, name string) UUID {
 func (g *generator) NewV4() UUID {
 	u := UUID{}
 	g.safeRandom(u[:])
-	u.SetVersion(4)
+	u.SetVersion(V4)
 	u.SetVariant()
 
 	return u
@@ -160,7 +160,7 @@ func (g *generator) NewV4() UUID {
 // NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
 func (g *generator) NewV5(ns UUID, name string) UUID {
 	u := newFromHash(sha1.New(), ns, name)
-	u.SetVersion(5)
+	u.SetVersion(V5)
 	u.SetVariant()
 
 	return u

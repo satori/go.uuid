@@ -23,68 +23,66 @@ package uuid
 
 import (
 	"bytes"
-	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
-func TestFromBytes(t *testing.T) {
+type codecTestSuite struct{}
+
+var _ = Suite(&codecTestSuite{})
+
+func (s *codecTestSuite) TestFromBytes(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	u1, err := FromBytes(b1)
-	if err != nil {
-		t.Errorf("Error parsing UUID from bytes: %s", err)
-	}
-
-	if !Equal(u, u1) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u1, Equals, u)
 
 	b2 := []byte{}
-
 	_, err = FromBytes(b2)
-	if err == nil {
-		t.Errorf("Should return error parsing from empty byte slice, got %s", err)
+	c.Assert(err, NotNil)
+}
+
+func (s *codecTestSuite) BenchmarkFromBytes(c *C) {
+	bytes := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
+	for i := 0; i < c.N; i++ {
+		FromBytes(bytes)
 	}
 }
 
-func TestMarshalBinary(t *testing.T) {
+func (s *codecTestSuite) TestMarshalBinary(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	b2, err := u.MarshalBinary()
-	if err != nil {
-		t.Errorf("Error marshaling UUID: %s", err)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(bytes.Equal(b1, b2), Equals, true)
+}
 
-	if !bytes.Equal(b1, b2) {
-		t.Errorf("Marshaled UUID should be %s, got %s", b1, b2)
+func (s *codecTestSuite) BenchmarkMarshalBinary(c *C) {
+	u := NewV4()
+	for i := 0; i < c.N; i++ {
+		u.MarshalBinary()
 	}
 }
 
-func TestUnmarshalBinary(t *testing.T) {
+func (s *codecTestSuite) TestUnmarshalBinary(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	u1 := UUID{}
 	err := u1.UnmarshalBinary(b1)
-	if err != nil {
-		t.Errorf("Error unmarshaling UUID: %s", err)
-	}
-
-	if !Equal(u, u1) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u1, Equals, u)
 
 	b2 := []byte{}
 	u2 := UUID{}
-
 	err = u2.UnmarshalBinary(b2)
-	if err == nil {
-		t.Errorf("Should return error unmarshalling from empty byte slice, got %s", err)
-	}
+	c.Assert(err, NotNil)
 }
 
-func TestFromString(t *testing.T) {
+func (s *codecTestSuite) TestFromString(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
@@ -94,88 +92,78 @@ func TestFromString(t *testing.T) {
 	s5 := "urn:uuid:6ba7b8109dad11d180b400c04fd430c8"
 
 	_, err := FromString("")
-	if err == nil {
-		t.Errorf("Should return error trying to parse empty string, got %s", err)
-	}
+	c.Assert(err, NotNil)
 
 	u1, err := FromString(s1)
-	if err != nil {
-		t.Errorf("Error parsing UUID from string: %s", err)
-	}
-
-	if !Equal(u, u1) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u1, Equals, u)
 
 	u2, err := FromString(s2)
-	if err != nil {
-		t.Errorf("Error parsing UUID from string: %s", err)
-	}
-
-	if !Equal(u, u2) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u2)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u2, Equals, u)
 
 	u3, err := FromString(s3)
-	if err != nil {
-		t.Errorf("Error parsing UUID from string: %s", err)
-	}
-
-	if !Equal(u, u3) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u3)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u3, Equals, u)
 
 	u4, err := FromString(s4)
-	if err != nil {
-		t.Errorf("Error parsing UUID from string: %s", err)
-	}
-
-	if !Equal(u, u4) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u4)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u4, Equals, u)
 
 	u5, err := FromString(s5)
-	if err != nil {
-		t.Errorf("Error parsing UUID from string: %s", err)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u5, Equals, u)
+}
 
-	if !Equal(u, u5) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u5)
+func (s *codecTestSuite) BenchmarkFromString(c *C) {
+	str := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	for i := 0; i < c.N; i++ {
+		FromString(str)
 	}
 }
 
-func TestFromStringShort(t *testing.T) {
+func (s *codecTestSuite) BenchmarkFromStringUrn(c *C) {
+	str := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+	for i := 0; i < c.N; i++ {
+		FromString(str)
+	}
+}
+
+func (s *codecTestSuite) BenchmarkFromStringWithBrackets(c *C) {
+	str := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
+	for i := 0; i < c.N; i++ {
+		FromString(str)
+	}
+}
+
+func (s *codecTestSuite) TestFromStringShort(c *C) {
 	// Invalid 35-character UUID string
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c"
 
 	for i := len(s1); i >= 0; i-- {
 		_, err := FromString(s1[:i])
-		if err == nil {
-			t.Errorf("Should return error trying to parse too short string, got %s", err)
-		}
+		c.Assert(err, NotNil)
 	}
 }
 
-func TestFromStringLong(t *testing.T) {
+func (s *codecTestSuite) TestFromStringLong(c *C) {
 	// Invalid 37+ character UUID string
-	s := []string{
+	strings := []string{
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8=",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 		"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}f",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c800c04fd430c8",
 	}
 
-	for _, str := range s {
+	for _, str := range strings {
 		_, err := FromString(str)
-		if err == nil {
-			t.Errorf("Should return error trying to parse too long string, passed %s", str)
-		}
+		c.Assert(err, NotNil)
 	}
 }
 
-func TestFromStringInvalid(t *testing.T) {
+func (s *codecTestSuite) TestFromStringInvalid(c *C) {
 	// Invalid UUID string formats
-	s := []string{
+	strings := []string{
 		"6ba7b8109dad11d180b400c04fd430c86ba7b8109dad11d180b400c04fd430c8",
 		"urn:uuid:{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 		"uuid:urn:6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -194,62 +182,67 @@ func TestFromStringInvalid(t *testing.T) {
 		"6ba7b8109dad11d180b4-00c04fd430c8",
 	}
 
-	for _, str := range s {
+	for _, str := range strings {
 		_, err := FromString(str)
-		if err == nil {
-			t.Errorf("Should return error trying to parse invalid string, passed %s", str)
-		}
+		c.Assert(err, NotNil)
 	}
 }
 
-func TestFromStringOrNil(t *testing.T) {
+func (s *codecTestSuite) TestFromStringOrNil(c *C) {
 	u := FromStringOrNil("")
-	if u != Nil {
-		t.Errorf("Should return Nil UUID on parse failure, got %s", u)
-	}
+	c.Assert(u, Equals, Nil)
 }
 
-func TestFromBytesOrNil(t *testing.T) {
+func (s *codecTestSuite) TestFromBytesOrNil(c *C) {
 	b := []byte{}
 	u := FromBytesOrNil(b)
-	if u != Nil {
-		t.Errorf("Should return Nil UUID on parse failure, got %s", u)
-	}
+	c.Assert(u, Equals, Nil)
 }
 
-func TestMarshalText(t *testing.T) {
+func (s *codecTestSuite) TestMarshalText(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	b2, err := u.MarshalText()
-	if err != nil {
-		t.Errorf("Error marshaling UUID: %s", err)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(bytes.Equal(b1, b2), Equals, true)
+}
 
-	if !bytes.Equal(b1, b2) {
-		t.Errorf("Marshaled UUID should be %s, got %s", b1, b2)
+func (s *codecTestSuite) BenchmarkMarshalText(c *C) {
+	u := NewV4()
+	for i := 0; i < c.N; i++ {
+		u.MarshalText()
 	}
 }
 
-func TestUnmarshalText(t *testing.T) {
+func (s *codecTestSuite) TestUnmarshalText(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	u1 := UUID{}
 	err := u1.UnmarshalText(b1)
-	if err != nil {
-		t.Errorf("Error unmarshaling UUID: %s", err)
-	}
-
-	if !Equal(u, u1) {
-		t.Errorf("UUIDs should be equal: %s and %s", u, u1)
-	}
+	c.Assert(err, IsNil)
+	c.Assert(u1, Equals, u)
 
 	b2 := []byte("")
 	u2 := UUID{}
-
 	err = u2.UnmarshalText(b2)
-	if err == nil {
-		t.Errorf("Should return error trying to unmarshal from empty string")
+	c.Assert(err, NotNil)
+}
+
+func (s *codecTestSuite) BenchmarkUnmarshalText(c *C) {
+	bytes := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+	u := UUID{}
+	for i := 0; i < c.N; i++ {
+		u.UnmarshalText(bytes)
+	}
+}
+
+var sink string
+
+func (s *codecTestSuite) BenchmarkMarshalToString(c *C) {
+	u := NewV4()
+	for i := 0; i < c.N; i++ {
+		sink = u.String()
 	}
 }

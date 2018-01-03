@@ -1,4 +1,4 @@
-// Copyright (C) 2013, 2015 by Maxim Bublis <b@codemonkey.ru>
+// Copyright (C) 2013-2018 by Maxim Bublis <b@codemonkey.ru>
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -24,82 +24,61 @@ package uuid
 import (
 	"bytes"
 	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
-func TestBytes(t *testing.T) {
+// Hook up gocheck into the "go test" runner.
+func TestUUID(t *testing.T) { TestingT(t) }
+
+type testSuite struct{}
+
+var _ = Suite(&testSuite{})
+
+func (s *testSuite) TestBytes(c *C) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	bytes1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
-	if !bytes.Equal(u.Bytes(), bytes1) {
-		t.Errorf("Incorrect bytes representation for UUID: %s", u)
-	}
+	c.Assert(bytes.Equal(u.Bytes(), bytes1), Equals, true)
 }
 
-func TestString(t *testing.T) {
-	if NamespaceDNS.String() != "6ba7b810-9dad-11d1-80b4-00c04fd430c8" {
-		t.Errorf("Incorrect string representation for UUID: %s", NamespaceDNS.String())
-	}
+func (s *testSuite) TestString(c *C) {
+	c.Assert(NamespaceDNS.String(), Equals, "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 }
 
-func TestEqual(t *testing.T) {
-	if !Equal(NamespaceDNS, NamespaceDNS) {
-		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceDNS)
-	}
-
-	if Equal(NamespaceDNS, NamespaceURL) {
-		t.Errorf("Incorrect comparison of %s and %s", NamespaceDNS, NamespaceURL)
-	}
+func (s *testSuite) TestEqual(c *C) {
+	c.Assert(Equal(NamespaceDNS, NamespaceDNS), Equals, true)
+	c.Assert(Equal(NamespaceDNS, NamespaceURL), Equals, false)
 }
 
-func TestVersion(t *testing.T) {
+func (s *testSuite) TestVersion(c *C) {
 	u := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-	if u.Version() != 1 {
-		t.Errorf("Incorrect version for UUID: %d", u.Version())
-	}
+	c.Assert(u.Version(), Equals, V1)
 }
 
-func TestSetVersion(t *testing.T) {
+func (s *testSuite) TestSetVersion(c *C) {
 	u := UUID{}
 	u.SetVersion(4)
-
-	if u.Version() != 4 {
-		t.Errorf("Incorrect version for UUID after u.setVersion(4): %d", u.Version())
-	}
+	c.Assert(u.Version(), Equals, V4)
 }
 
-func TestVariant(t *testing.T) {
+func (s *testSuite) TestVariant(c *C) {
 	u1 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-	if u1.Variant() != VariantNCS {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantNCS, u1.Variant())
-	}
+	c.Assert(u1.Variant(), Equals, VariantNCS)
 
 	u2 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-	if u2.Variant() != VariantRFC4122 {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantRFC4122, u2.Variant())
-	}
+	c.Assert(u2.Variant(), Equals, VariantRFC4122)
 
 	u3 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-	if u3.Variant() != VariantMicrosoft {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantMicrosoft, u3.Variant())
-	}
+	c.Assert(u3.Variant(), Equals, VariantMicrosoft)
 
 	u4 := UUID{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-
-	if u4.Variant() != VariantFuture {
-		t.Errorf("Incorrect variant for UUID variant %d: %d", VariantFuture, u4.Variant())
-	}
+	c.Assert(u4.Variant(), Equals, VariantFuture)
 }
 
-func TestSetVariant(t *testing.T) {
-	u := new(UUID)
+func (s *testSuite) TestSetVariant(c *C) {
+	u := UUID{}
 	u.SetVariant()
-
-	if u.Variant() != VariantRFC4122 {
-		t.Errorf("Incorrect variant for UUID after u.setVariant(): %d", u.Variant())
-	}
+	c.Assert(u.Variant(), Equals, VariantRFC4122)
 }
