@@ -107,7 +107,7 @@ func (g *generator) NewV1() UUID {
 	copy(u[10:], hardwareAddr)
 
 	u.SetVersion(V1)
-	u.SetVariant()
+	u.SetVariant(VariantRFC4122)
 
 	return u
 }
@@ -133,7 +133,7 @@ func (g *generator) NewV2(domain byte) UUID {
 	copy(u[10:], hardwareAddr)
 
 	u.SetVersion(V2)
-	u.SetVariant()
+	u.SetVariant(VariantRFC4122)
 
 	return u
 }
@@ -142,7 +142,7 @@ func (g *generator) NewV2(domain byte) UUID {
 func (g *generator) NewV3(ns UUID, name string) UUID {
 	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(V3)
-	u.SetVariant()
+	u.SetVariant(VariantRFC4122)
 
 	return u
 }
@@ -152,7 +152,7 @@ func (g *generator) NewV4() UUID {
 	u := UUID{}
 	g.safeRandom(u[:])
 	u.SetVersion(V4)
-	u.SetVariant()
+	u.SetVariant(VariantRFC4122)
 
 	return u
 }
@@ -161,7 +161,7 @@ func (g *generator) NewV4() UUID {
 func (g *generator) NewV5(ns UUID, name string) UUID {
 	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(V5)
-	u.SetVariant()
+	u.SetVariant(VariantRFC4122)
 
 	return u
 }

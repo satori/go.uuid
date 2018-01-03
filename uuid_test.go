@@ -79,6 +79,12 @@ func (s *testSuite) TestVariant(c *C) {
 
 func (s *testSuite) TestSetVariant(c *C) {
 	u := UUID{}
-	u.SetVariant()
+	u.SetVariant(VariantNCS)
+	c.Assert(u.Variant(), Equals, VariantNCS)
+	u.SetVariant(VariantRFC4122)
 	c.Assert(u.Variant(), Equals, VariantRFC4122)
+	u.SetVariant(VariantMicrosoft)
+	c.Assert(u.Variant(), Equals, VariantMicrosoft)
+	u.SetVariant(VariantFuture)
+	c.Assert(u.Variant(), Equals, VariantFuture)
 }
