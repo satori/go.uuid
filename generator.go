@@ -26,6 +26,7 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"io"
 	"net"
@@ -39,6 +40,7 @@ import (
 const epochStart = 122192928000000000
 
 type epochFunc func() time.Time
+type hwAddrFunc func() (net.HardwareAddr, error)
 
 var (
 	global = newRFC4122Generator()
@@ -90,6 +92,7 @@ type rfc4122Generator struct {
 	rand io.Reader
 
 	epochFunc     epochFunc
+	hwAddrFunc    hwAddrFunc
 	lastTime      uint64
 	clockSequence uint16
 	hardwareAddr  [6]byte
@@ -97,8 +100,9 @@ type rfc4122Generator struct {
 
 func newRFC4122Generator() Generator {
 	return &rfc4122Generator{
-		epochFunc: time.Now,
-		rand:      rand.Reader,
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
 	}
 }
 
@@ -129,7 +133,7 @@ func (g *rfc4122Generator) NewV1() (UUID, error) {
 
 // NewV2 returns DCE Security UUID based on POSIX UID/GID.
 func (g *rfc4122Generator) NewV2(domain byte) (UUID, error) {
-	u, err := NewV1()
+	u, err := g.NewV1()
 	if err != nil {
 		return Nil, err
 	}
@@ -211,14 +215,9 @@ func (g *rfc4122Generator) getClockSequence() (uint64, uint16, error) {
 func (g *rfc4122Generator) getHardwareAddr() ([]byte, error) {
 	var err error
 	g.hardwareAddrOnce.Do(func() {
-		interfaces, err := net.Interfaces()
-		if err == nil {
-			for _, iface := range interfaces {
-				if len(iface.HardwareAddr) >= 6 {
-					copy(g.hardwareAddr[:], iface.HardwareAddr)
-					return
-				}
-			}
+		if hwAddr, err := g.hwAddrFunc(); err == nil {
+			copy(g.hardwareAddr[:], hwAddr)
+			return
 		}
 
 		// Initialize hardwareAddr randomly in case
@@ -249,4 +248,18 @@ func newFromHash(h hash.Hash, ns UUID, name string) UUID {
 	copy(u[:], h.Sum(nil))
 
 	return u
+}
+
+// Returns hardware address.
+func defaultHWAddrFunc() (net.HardwareAddr, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return []byte{}, err
+	}
+	for _, iface := range ifaces {
+		if len(iface.HardwareAddr) >= 6 {
+			return iface.HardwareAddr, nil
+		}
+	}
+	return []byte{}, fmt.Errorf("uuid: no HW address found")
 }

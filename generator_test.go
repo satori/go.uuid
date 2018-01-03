@@ -24,15 +24,23 @@ package uuid
 import (
 	"crypto/rand"
 	"fmt"
+	"net"
 	"time"
 
 	. "gopkg.in/check.v1"
 )
 
-type faultyReader struct{}
+type faultyReader struct {
+	callsNum   int
+	readToFail int // Read call number to fail
+}
 
-func (f *faultyReader) Read(dest []byte) (int, error) {
-	return 0, fmt.Errorf("io: reader is faulty")
+func (r *faultyReader) Read(dest []byte) (int, error) {
+	r.callsNum++
+	if (r.callsNum - 1) == r.readToFail {
+		return 0, fmt.Errorf("io: reader is faulty")
+	}
+	return rand.Read(dest)
 }
 
 type genTestSuite struct{}
@@ -55,7 +63,8 @@ func (s *genTestSuite) TestNewV1EpochStale(c *C) {
 		epochFunc: func() time.Time {
 			return time.Unix(0, 0)
 		},
-		rand: rand.Reader,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
 	}
 	u1, err := g.NewV1()
 	c.Assert(err, IsNil)
@@ -66,8 +75,36 @@ func (s *genTestSuite) TestNewV1EpochStale(c *C) {
 
 func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
 	g := &rfc4122Generator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
+	}
+	u1, err := g.NewV1()
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
+	g := &rfc4122Generator{
 		epochFunc: time.Now,
-		rand:      &faultyReader{},
+		hwAddrFunc: func() (net.HardwareAddr, error) {
+			return []byte{}, fmt.Errorf("uuid: no hw address found")
+		},
+		rand: rand.Reader,
+	}
+	_, err := g.NewV1()
+	c.Assert(err, IsNil)
+}
+
+func (s *genTestSuite) TestNewV1MissingNetInterfacesAndFaultyRand(c *C) {
+	g := &rfc4122Generator{
+		epochFunc: time.Now,
+		hwAddrFunc: func() (net.HardwareAddr, error) {
+			return []byte{}, fmt.Errorf("uuid: no hw address found")
+		},
+		rand: &faultyReader{
+			readToFail: 1,
+		},
 	}
 	u1, err := g.NewV1()
 	c.Assert(err, NotNil)
@@ -95,6 +132,17 @@ func (s *genTestSuite) TestNewV2(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(u3.Version(), Equals, V2)
 	c.Assert(u3.Variant(), Equals, VariantRFC4122)
+}
+
+func (s *genTestSuite) TestNewV2FaultyRand(c *C) {
+	g := &rfc4122Generator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
+	}
+	u1, err := g.NewV2(DomainPerson)
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
 }
 
 func (s *genTestSuite) BenchmarkNewV2(c *C) {
@@ -138,8 +186,9 @@ func (s *genTestSuite) TestNewV4(c *C) {
 
 func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
 	g := &rfc4122Generator{
-		epochFunc: time.Now,
-		rand:      &faultyReader{},
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
 	}
 	u1, err := g.NewV4()
 	c.Assert(err, NotNil)
