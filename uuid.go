@@ -26,7 +26,10 @@ package uuid
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
+	"fmt"
+	"time"
 )
 
 // Size of a UUID in bytes.
@@ -144,4 +147,26 @@ func Must(u UUID, err error) UUID {
 		panic(err)
 	}
 	return u
+}
+
+// Nanos returns the number of nanoseconds in a V1 UUID
+func (u *UUID) Nanos() (int64, error) {
+	if u.Version() != 1 {
+		err := fmt.Errorf("uuid: %s is version %d, not version 1", u, u.Version())
+		return 0, err
+	}
+	low := binary.BigEndian.Uint32(u[0:4])
+	mid := binary.BigEndian.Uint16(u[4:6])
+	hi := binary.BigEndian.Uint16(u[6:8]) & 0xfff
+	return 100 * (int64(low) + (int64(mid) << 32) + (int64(hi) << 48) - int64(epochStart)), nil
+}
+
+// Time returns the time embedded in a V1 UUID
+// An error is returned if this is not a V1 UUID
+func (u *UUID) Time() (time.Time, error) {
+	nanos, err := u.Nanos()
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Unix(0, nanos), nil
 }
