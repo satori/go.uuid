@@ -47,18 +47,27 @@ type genTestSuite struct{}
 
 var _ = Suite(&genTestSuite{})
 
-func (s *genTestSuite) TestNewV1(c *C) {
-	u1, err := NewV1()
+func (s *genTestSuite) TestGenV1(c *C) {
+	u1, err := GenV1()
 	c.Assert(err, IsNil)
 	c.Assert(u1.Version(), Equals, V1)
 	c.Assert(u1.Variant(), Equals, VariantRFC4122)
 
-	u2, err := NewV1()
+	u2, err := GenV1()
 	c.Assert(err, IsNil)
 	c.Assert(u1, Not(Equals), u2)
 }
 
-func (s *genTestSuite) TestNewV1EpochStale(c *C) {
+func (s *genTestSuite) TestNewV1(c *C) {
+	u1 := NewV1()
+	c.Assert(u1.Version(), Equals, V1)
+	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+
+	u2 := NewV1()
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestGeneratorNewV1EpochStale(c *C) {
 	g := &rfc4122Generator{
 		epochFunc: func() time.Time {
 			return time.Unix(0, 0)
@@ -73,7 +82,7 @@ func (s *genTestSuite) TestNewV1EpochStale(c *C) {
 	c.Assert(u1, Not(Equals), u2)
 }
 
-func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
+func (s *genTestSuite) TestGeneratorNewV1FaultyRand(c *C) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
@@ -84,7 +93,7 @@ func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
 	c.Assert(u1, Equals, Nil)
 }
 
-func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
+func (s *genTestSuite) TestGeneratorNewV1MissingNetworkInterfaces(c *C) {
 	g := &rfc4122Generator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
@@ -96,7 +105,7 @@ func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
 	c.Assert(err, IsNil)
 }
 
-func (s *genTestSuite) TestNewV1MissingNetInterfacesAndFaultyRand(c *C) {
+func (s *genTestSuite) TestGeneratorNewV1MissingNetInterfacesAndFaultyRand(c *C) {
 	g := &rfc4122Generator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
@@ -117,24 +126,38 @@ func (s *genTestSuite) BenchmarkNewV1(c *C) {
 	}
 }
 
-func (s *genTestSuite) TestNewV2(c *C) {
-	u1, err := NewV2(DomainPerson)
+func (s *genTestSuite) TestGenV2(c *C) {
+	u1, err := GenV2(DomainPerson)
 	c.Assert(err, IsNil)
 	c.Assert(u1.Version(), Equals, V2)
 	c.Assert(u1.Variant(), Equals, VariantRFC4122)
 
-	u2, err := NewV2(DomainGroup)
+	u2, err := GenV2(DomainGroup)
 	c.Assert(err, IsNil)
 	c.Assert(u2.Version(), Equals, V2)
 	c.Assert(u2.Variant(), Equals, VariantRFC4122)
 
-	u3, err := NewV2(DomainOrg)
+	u3, err := GenV2(DomainOrg)
 	c.Assert(err, IsNil)
 	c.Assert(u3.Version(), Equals, V2)
 	c.Assert(u3.Variant(), Equals, VariantRFC4122)
 }
 
-func (s *genTestSuite) TestNewV2FaultyRand(c *C) {
+func (s *genTestSuite) TestNewV2(c *C) {
+	u1 := NewV2(DomainPerson)
+	c.Assert(u1.Version(), Equals, V2)
+	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+
+	u2 := NewV2(DomainGroup)
+	c.Assert(u2.Version(), Equals, V2)
+	c.Assert(u2.Variant(), Equals, VariantRFC4122)
+
+	u3 := NewV2(DomainOrg)
+	c.Assert(u3.Version(), Equals, V2)
+	c.Assert(u3.Variant(), Equals, VariantRFC4122)
+}
+
+func (s *genTestSuite) TestGeneratorNewV2FaultyRand(c *C) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
@@ -173,18 +196,27 @@ func (s *genTestSuite) BenchmarkNewV3(c *C) {
 	}
 }
 
-func (s *genTestSuite) TestNewV4(c *C) {
-	u1, err := NewV4()
+func (s *genTestSuite) TestGenV4(c *C) {
+	u1, err := GenV4()
 	c.Assert(err, IsNil)
 	c.Assert(u1.Version(), Equals, V4)
 	c.Assert(u1.Variant(), Equals, VariantRFC4122)
 
-	u2, err := NewV4()
+	u2, err := GenV4()
 	c.Assert(err, IsNil)
 	c.Assert(u1, Not(Equals), u2)
 }
 
-func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
+func (s *genTestSuite) TestNewV4(c *C) {
+	u1 := NewV4()
+	c.Assert(u1.Version(), Equals, V4)
+	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+
+	u2 := NewV4()
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestGeneratorNewV4FaultyRand(c *C) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,

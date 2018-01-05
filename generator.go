@@ -49,14 +49,32 @@ var (
 	posixGID = uint32(os.Getgid())
 )
 
-// NewV1 returns UUID based on current timestamp and MAC address.
-func NewV1() (UUID, error) {
+// GenV1 returns UUID based on current timestamp and MAC address.
+func GenV1() (UUID, error) {
 	return global.NewV1()
 }
 
-// NewV2 returns DCE Security UUID based on POSIX UID/GID.
-func NewV2(domain byte) (UUID, error) {
+// NewV1 reliably returns UUID based on current timestamp and MAC address.
+func NewV1() UUID {
+	u, err := GenV1()
+	for err != nil {
+		u, err = GenV1()
+	}
+	return u
+}
+
+// GenV2 returns DCE Security UUID based on POSIX UID/GID.
+func GenV2(domain byte) (UUID, error) {
 	return global.NewV2(domain)
+}
+
+// NewV2 reliably returns DCE Security UUID based on POSIX UID/GID.
+func NewV2(domain byte) UUID {
+	u, err := GenV2(domain)
+	for err != nil {
+		u, err = GenV2(domain)
+	}
+	return u
 }
 
 // NewV3 returns UUID based on MD5 hash of namespace UUID and name.
@@ -64,9 +82,18 @@ func NewV3(ns UUID, name string) UUID {
 	return global.NewV3(ns, name)
 }
 
-// NewV4 returns random generated UUID.
-func NewV4() (UUID, error) {
+// GenV4 returns random generated UUID.
+func GenV4() (UUID, error) {
 	return global.NewV4()
+}
+
+// NewV4 reliably returns random generated UUID.
+func NewV4() UUID {
+	u, err := GenV4()
+	for err != nil {
+		u, err = GenV4()
+	}
+	return u
 }
 
 // NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
