@@ -57,8 +57,8 @@ func GenV1() (UUID, error) {
 // NewV1 reliably returns UUID based on current timestamp and MAC address.
 func NewV1() UUID {
 	u, err := GenV1()
-	for err != nil {
-		u, err = GenV1()
+	if err != nil {
+		panic(err)
 	}
 	return u
 }
@@ -71,8 +71,8 @@ func GenV2(domain byte) (UUID, error) {
 // NewV2 reliably returns DCE Security UUID based on POSIX UID/GID.
 func NewV2(domain byte) UUID {
 	u, err := GenV2(domain)
-	for err != nil {
-		u, err = GenV2(domain)
+	if err != nil {
+		panic(err)
 	}
 	return u
 }
@@ -90,8 +90,8 @@ func GenV4() (UUID, error) {
 // NewV4 reliably returns random generated UUID.
 func NewV4() UUID {
 	u, err := GenV4()
-	for err != nil {
-		u, err = GenV4()
+	if err != nil {
+		panic(err)
 	}
 	return u
 }
