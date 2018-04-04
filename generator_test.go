@@ -22,9 +22,11 @@
 package uuid
 
 import (
+	"bytes"
 	"crypto/rand"
 	"fmt"
 	"net"
+	"testing/iotest"
 	"time"
 
 	. "gopkg.in/check.v1"
@@ -193,6 +195,20 @@ func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
 	u1, err := g.NewV4()
 	c.Assert(err, NotNil)
 	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) TestNewV4PartialRead(c *C) {
+	g := &rfc4122Generator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       iotest.OneByteReader(rand.Reader),
+	}
+	u1, err := g.NewV4()
+	zeros := bytes.Count(u1.Bytes(), []byte{0})
+	mostlyZeros := zeros >= 10
+
+	c.Assert(err, IsNil)
+	c.Assert(mostlyZeros, Equals, false)
 }
 
 func (s *genTestSuite) BenchmarkNewV4(c *C) {
