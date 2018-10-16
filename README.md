@@ -23,7 +23,7 @@ Use the `go` command:
 
 ## Requirements
 
-UUID package requires Go >= 1.2.
+UUID package tested against Go >= 1.6.
 
 ## Example
 
