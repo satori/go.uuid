@@ -4,6 +4,14 @@
 [![Coverage Status](https://coveralls.io/repos/github/satori/go.uuid/badge.svg?branch=master)](https://coveralls.io/github/satori/go.uuid)
 [![GoDoc](http://godoc.org/github.com/satori/go.uuid?status.svg)](http://godoc.org/github.com/satori/go.uuid)
 
+## Deprecation Notice
+
+This repository is now deprecated in favor of the fork maintained by the Go Community, [github.com/gofrs/uuid](https://github.com/gofrs/uuid).
+Please use this new package, while being sure to choose a version newer than v2.0.0. The v2.0.0 release is API-compatible
+with the master branch of this repository.
+
+---
+
 This package provides pure Go implementation of Universally Unique Identifier (UUID). Supported both creation and parsing of UUIDs.
 
 With 100% test coverage and benchmarks out of box.
