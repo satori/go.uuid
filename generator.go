@@ -51,12 +51,14 @@ var (
 
 // NewV1 returns UUID based on current timestamp and MAC address.
 func NewV1() (UUID, error) {
-	return global.NewV1()
+	u, err := global.NewV1()
+	return u, err
 }
 
 // NewV2 returns DCE Security UUID based on POSIX UID/GID.
 func NewV2(domain byte) (UUID, error) {
-	return global.NewV2(domain)
+	u, err := global.NewV2(domain)
+	return u, err
 }
 
 // NewV3 returns UUID based on MD5 hash of namespace UUID and name.
@@ -66,7 +68,8 @@ func NewV3(ns UUID, name string) UUID {
 
 // NewV4 returns random generated UUID.
 func NewV4() (UUID, error) {
-	return global.NewV4()
+	u, err := global.NewV4()
+	return u, err
 }
 
 // NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
