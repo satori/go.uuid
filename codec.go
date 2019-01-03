@@ -31,10 +31,10 @@ import (
 )
 
 var (
-	// By default Legacy UUID subtype (0x03) is used, see
+	// By default, new (recommended) UUID subtype/kind (0x04) is used, see
 	// https://studio3t.com/knowledge-base/articles/mongodb-best-practices-uuid-data/#binary-subtypes-0x03-and-0x04 and
 	// http://bsonspec.org/spec.html for details. Can be changed with SetBSONKind.
-	bsonKind byte = 0x03
+	bsonKind byte = 0x04
 )
 
 // FromBytes returns UUID converted from raw byte slice input.
@@ -216,7 +216,7 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 }
 
 // GetBSON implements bson.Getter for marshaling UUID in BSON binary UUID format.
-// By default Kind of 0x03 (Legacy UUID) will be used. Can be changed with SetBSONKind.
+// By default Kind of 0x04 (new UUID) will be used. Can be changed with SetBSONKind.
 func (u UUID) GetBSON() (interface{}, error) {
 	toMarshal := bson.Binary{
 		Kind: bsonKind,
@@ -227,7 +227,7 @@ func (u UUID) GetBSON() (interface{}, error) {
 }
 
 // SetBSON implements bson.Setter for unmarshaling UUID from BSON binary UUID format.
-// By default Kind of 0x03 (Legacy UUID) will be used. Can be changed with SetBSONKind.
+// By default Kind of 0x04 (new UUID) will be used. Can be changed with SetBSONKind.
 func (u *UUID) SetBSON(raw bson.Raw) error {
 	var toUnmarshal bson.Binary
 
@@ -241,8 +241,8 @@ func (u *UUID) SetBSON(raw bson.Raw) error {
 	return err
 }
 
-// SetBSONKind changes BSON UUID Kind that will be used by GetBSON and SetBSON. Only value of
-// 0x03 (Legacy UUID) or 0x04 (UUID) can be used, SetBSONKind returns an error when requested value is different.
+// SetBSONKind changes BSON UUID Kind which will be used by GetBSON and SetBSON. Only values of
+// 0x03 (Legacy UUID) or 0x04 (new UUID) can be used, SetBSONKind returns error when requested kind is different.
 func SetBSONKind(kind byte) error {
 	if kind < 0x03 || kind > 0x04 {
 		return errors.New("requested BSON UUID kind is not allowed")
