@@ -108,6 +108,19 @@ func (u *UUID) UnmarshalText(text []byte) (err error) {
 	}
 }
 
+// MarshalJSON implements the json.RawMessage interface.
+// The encoding is the same as returned by String.
+func (u *UUID) MarshalJSON() ([]byte, error) {
+	return u.Bytes(), nil
+}
+
+// UnmarshalJSON implements the json.RawMessage interface.
+// Supports same formats as UnmarshalText.
+func (u *UUID) UnmarshalJSON(data []byte) error {
+	// removed starting and ending " characters and marshalling as text
+	return u.UnmarshalText(data[1 : len(data)-1])
+}
+
 // decodeCanonical decodes UUID string in format
 // "6ba7b810-9dad-11d1-80b4-00c04fd430c8".
 func (u *UUID) decodeCanonical(t []byte) (err error) {

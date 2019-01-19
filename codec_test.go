@@ -23,11 +23,18 @@ package uuid
 
 import (
 	"bytes"
+	"encoding/json"
 
 	. "gopkg.in/check.v1"
 )
 
 type codecTestSuite struct{}
+
+// jsonTestStruct is a test struct to test MarshalJSON and
+// UnmarshalJSON functions.
+type jsonTestStruct struct {
+	ID UUID `json:"id,required"`
+}
 
 var _ = Suite(&codecTestSuite{})
 
@@ -209,6 +216,18 @@ func (s *codecTestSuite) TestMarshalText(c *C) {
 	c.Assert(bytes.Equal(b1, b2), Equals, true)
 }
 
+func (s *codecTestSuite) TestMarshalJSON(c *C) {
+	testJSON := jsonTestStruct{
+		ID: UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8},
+	}
+
+	jsonExpect := []byte(`{"id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8"}`)
+
+	jsonActual, err := json.Marshal(testJSON)
+	c.Assert(err, IsNil)
+	c.Assert(bytes.Equal(jsonExpect, jsonActual), Equals, true)
+}
+
 func (s *codecTestSuite) BenchmarkMarshalText(c *C) {
 	u, err := NewV4()
 	c.Assert(err, IsNil)
@@ -230,6 +249,19 @@ func (s *codecTestSuite) TestUnmarshalText(c *C) {
 	u2 := UUID{}
 	err = u2.UnmarshalText(b2)
 	c.Assert(err, NotNil)
+}
+
+func (s *codecTestSuite) TestUnmarshalJSON(c *C) {
+	testExpected := jsonTestStruct{
+		ID: UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8},
+	}
+	var testActual jsonTestStruct
+
+	jsonString := []byte(`{"id":"6ba7b810-9dad-11d1-80b4-00c04fd430c8"}`)
+
+	err := json.Unmarshal(jsonString, &testActual)
+	c.Assert(err, IsNil)
+	c.Assert(testExpected.ID, Equals, testActual.ID)
 }
 
 func (s *codecTestSuite) BenchmarkUnmarshalText(c *C) {
