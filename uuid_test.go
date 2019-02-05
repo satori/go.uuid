@@ -48,6 +48,10 @@ func (s *testSuite) TestString(c *C) {
 	c.Assert(NamespaceDNS.String(), Equals, "6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 }
 
+func (s *testSuite) TestStringNoHyphens(c *C) {
+	c.Assert(NamespaceDNS.StringNoHyphens(), Equals, "6ba7b8109dad11d180b400c04fd430c8")
+}
+
 func (s *testSuite) TestEqual(c *C) {
 	c.Assert(Equal(NamespaceDNS, NamespaceDNS), Equals, true)
 	c.Assert(Equal(NamespaceDNS, NamespaceURL), Equals, false)
