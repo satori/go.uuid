@@ -130,7 +130,7 @@ func (u UUID) String() string {
 
 // Returns string representation of UUID without hyphens
 func (u UUID) StringNoHyphens() string {
-	buf := make([]byte, 36)
+	buf := make([]byte, 32)
 
 	hex.Encode(buf[0:8], u[0:4])
 	hex.Encode(buf[8:12], u[4:6])
