@@ -128,7 +128,7 @@ func (u UUID) String() string {
 	return string(buf)
 }
 
-// Returns string representation of UUID without hyphens
+// StringNoHyphens returns the string representation of UUID without hyphens.
 func (u UUID) StringNoHyphens() string {
 	return hex.EncodeToString(u[:])
 }
