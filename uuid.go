@@ -128,6 +128,11 @@ func (u UUID) String() string {
 	return string(buf)
 }
 
+// StringNoHyphens returns the string representation of UUID without hyphens.
+func (u UUID) StringNoHyphens() string {
+	return hex.EncodeToString(u[:])
+}
+
 // SetVersion sets version bits.
 func (u *UUID) SetVersion(v byte) {
 	u[6] = (u[6] & 0x0f) | (v << 4)
