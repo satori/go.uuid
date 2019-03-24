@@ -24,6 +24,7 @@ package uuid
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 )
 
@@ -203,4 +204,27 @@ func (u *UUID) UnmarshalBinary(data []byte) (err error) {
 	copy(u[:], data)
 
 	return
+}
+
+// MarshalJSON marshalls the NullUUID as nil or the nested UUID
+func (u NullUUID) MarshalJSON() ([]byte, error) {
+	if u.Valid == false {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(u.UUID)
+}
+
+// UnmarshalJSON unmarshalls a NullUUID
+func (u *NullUUID) UnmarshalJSON(b []byte) error {
+	if bytes.Equal(b, []byte("null")) {
+		u.UUID, u.Valid = Nil, false
+		return nil
+	}
+
+	if err := json.Unmarshal(b, &u.UUID); err != nil {
+		return err
+	}
+	u.Valid = true
+
+	return nil
 }
