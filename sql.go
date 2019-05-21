@@ -76,3 +76,30 @@ func (u *NullUUID) Scan(src interface{}) error {
 	u.Valid = true
 	return u.UUID.Scan(src)
 }
+
+// BinaryNullUUID can be used with the standard sql package to represent a
+// UUID value that can be NULL in the database
+type BinaryNullUUID struct {
+	UUID  UUID
+	Valid bool
+}
+
+// Value implements the driver.Valuer interface.
+func (u BinaryNullUUID) Value() (driver.Value, error) {
+	if !u.Valid {
+		return nil, nil
+	}
+	return u.UUID.Bytes(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+func (u *BinaryNullUUID) Scan(src interface{}) error {
+	if src == nil {
+		u.UUID, u.Valid = Nil, false
+		return nil
+	}
+
+	// Delegate to UUID Scan function
+	u.Valid = true
+	return u.UUID.Scan(src)
+}
