@@ -138,10 +138,7 @@ func (u *UUID) decodeCanonical(t []byte) (err error) {
 func (u *UUID) decodeHashLike(t []byte) (err error) {
 	src := t[:]
 	dst := u[:]
-
-	if _, err = hex.Decode(dst, src); err != nil {
-		return err
-	}
+	_, err = hex.Decode(dst, src)
 	return
 }
 
