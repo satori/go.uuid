@@ -102,7 +102,7 @@ func newRFC4122Generator() Generator {
 	return &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
-		rand:       rand.Reader,
+		rand:       newBytesBuffer(4096, rand.Reader),
 	}
 }
 
