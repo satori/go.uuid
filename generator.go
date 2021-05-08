@@ -43,7 +43,7 @@ type epochFunc func() time.Time
 type hwAddrFunc func() (net.HardwareAddr, error)
 
 var (
-	global = newRFC4122Generator()
+	global = newRfc4122AndCombGenerator()
 
 	posixUID = uint32(os.Getuid())
 	posixGID = uint32(os.Getgid())
@@ -69,6 +69,17 @@ func NewV4() (UUID, error) {
 	return global.NewV4()
 }
 
+// NewCombV1 returns ordered CombUUID based on current timestamp and MAC address.
+func NewCombV1() (CombUUID, error) {
+	return global.NewCombV1()
+}
+
+// NewCombV4 returns CombUUID based on current timestamp and random generated UUID
+// with ordered created time in 100ns precision.
+func NewCombV4() (CombUUID, error) {
+	return global.NewCombV4()
+}
+
 // NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
 func NewV5(ns UUID, name string) UUID {
 	return global.NewV5(ns, name)
@@ -76,15 +87,20 @@ func NewV5(ns UUID, name string) UUID {
 
 // Generator provides interface for generating UUIDs.
 type Generator interface {
+	// RFC 4122
 	NewV1() (UUID, error)
 	NewV2(domain byte) (UUID, error)
 	NewV3(ns UUID, name string) UUID
 	NewV4() (UUID, error)
 	NewV5(ns UUID, name string) UUID
+
+	// COMB
+	NewCombV1() (CombUUID, error)
+	NewCombV4() (CombUUID, error)
 }
 
 // Default generator implementation.
-type rfc4122Generator struct {
+type rfc4122AndCombGenerator struct {
 	clockSequenceOnce sync.Once
 	hardwareAddrOnce  sync.Once
 	storageMutex      sync.Mutex
@@ -98,8 +114,8 @@ type rfc4122Generator struct {
 	hardwareAddr  [6]byte
 }
 
-func newRFC4122Generator() Generator {
-	return &rfc4122Generator{
+func newRfc4122AndCombGenerator() Generator {
+	return &rfc4122AndCombGenerator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       rand.Reader,
@@ -107,7 +123,7 @@ func newRFC4122Generator() Generator {
 }
 
 // NewV1 returns UUID based on current timestamp and MAC address.
-func (g *rfc4122Generator) NewV1() (UUID, error) {
+func (g *rfc4122AndCombGenerator) NewV1() (UUID, error) {
 	u := UUID{}
 
 	timeNow, clockSeq, err := g.getClockSequence()
@@ -132,7 +148,7 @@ func (g *rfc4122Generator) NewV1() (UUID, error) {
 }
 
 // NewV2 returns DCE Security UUID based on POSIX UID/GID.
-func (g *rfc4122Generator) NewV2(domain byte) (UUID, error) {
+func (g *rfc4122AndCombGenerator) NewV2(domain byte) (UUID, error) {
 	u, err := g.NewV1()
 	if err != nil {
 		return Nil, err
@@ -154,7 +170,7 @@ func (g *rfc4122Generator) NewV2(domain byte) (UUID, error) {
 }
 
 // NewV3 returns UUID based on MD5 hash of namespace UUID and name.
-func (g *rfc4122Generator) NewV3(ns UUID, name string) UUID {
+func (g *rfc4122AndCombGenerator) NewV3(ns UUID, name string) UUID {
 	u := newFromHash(md5.New(), ns, name)
 	u.SetVersion(V3)
 	u.SetVariant(VariantRFC4122)
@@ -163,7 +179,7 @@ func (g *rfc4122Generator) NewV3(ns UUID, name string) UUID {
 }
 
 // NewV4 returns random generated UUID.
-func (g *rfc4122Generator) NewV4() (UUID, error) {
+func (g *rfc4122AndCombGenerator) NewV4() (UUID, error) {
 	u := UUID{}
 	if _, err := io.ReadFull(g.rand, u[:]); err != nil {
 		return Nil, err
@@ -175,7 +191,7 @@ func (g *rfc4122Generator) NewV4() (UUID, error) {
 }
 
 // NewV5 returns UUID based on SHA-1 hash of namespace UUID and name.
-func (g *rfc4122Generator) NewV5(ns UUID, name string) UUID {
+func (g *rfc4122AndCombGenerator) NewV5(ns UUID, name string) UUID {
 	u := newFromHash(sha1.New(), ns, name)
 	u.SetVersion(V5)
 	u.SetVariant(VariantRFC4122)
@@ -183,8 +199,53 @@ func (g *rfc4122Generator) NewV5(ns UUID, name string) UUID {
 	return u
 }
 
+// NewCombV1 returns nonstandard UUID based on V1 RFC4122 with timestamp bytes in the front
+func (g *rfc4122AndCombGenerator) NewCombV1() (CombUUID, error) {
+	u := CombUUID{}
+
+	timeNow, clockSeq, err := g.getClockSequence()
+	if err != nil {
+		return CombUUID(Nil), err
+	}
+
+	binary.BigEndian.PutUint16(u[0:], uint16(timeNow>>48))
+	binary.BigEndian.PutUint16(u[2:], uint16(timeNow>>32))
+	binary.BigEndian.PutUint32(u[4:], uint32(timeNow))
+	binary.BigEndian.PutUint16(u[8:], clockSeq)
+
+	hardwareAddr, err := g.getHardwareAddr()
+	if err != nil {
+		return CombUUID(Nil), err
+	}
+	copy(u[10:], hardwareAddr)
+
+	u.SetVersion(V1)
+
+	return u, nil
+}
+
+// NewCombV4 returns nonstandard UUID based on V4 RFC4122
+// with timestamp bytes in the front (not fully random)
+func (g *rfc4122AndCombGenerator) NewCombV4() (CombUUID, error) {
+	u := CombUUID{}
+
+	timeNow := g.getEpoch()
+
+	binary.BigEndian.PutUint16(u[0:], uint16(timeNow>>48))
+	binary.BigEndian.PutUint16(u[2:], uint16(timeNow>>32))
+	binary.BigEndian.PutUint32(u[4:], uint32(timeNow))
+
+	if _, err := io.ReadFull(g.rand, u[8:]); err != nil {
+		return CombUUID(Nil), err
+	}
+
+	u.SetVersion(V4)
+
+	return u, nil
+}
+
 // Returns epoch and clock sequence.
-func (g *rfc4122Generator) getClockSequence() (uint64, uint16, error) {
+func (g *rfc4122AndCombGenerator) getClockSequence() (uint64, uint16, error) {
 	var err error
 	g.clockSequenceOnce.Do(func() {
 		buf := make([]byte, 2)
@@ -212,7 +273,7 @@ func (g *rfc4122Generator) getClockSequence() (uint64, uint16, error) {
 }
 
 // Returns hardware address.
-func (g *rfc4122Generator) getHardwareAddr() ([]byte, error) {
+func (g *rfc4122AndCombGenerator) getHardwareAddr() ([]byte, error) {
 	var err error
 	g.hardwareAddrOnce.Do(func() {
 		if hwAddr, err := g.hwAddrFunc(); err == nil {
@@ -236,7 +297,7 @@ func (g *rfc4122Generator) getHardwareAddr() ([]byte, error) {
 
 // Returns difference in 100-nanosecond intervals between
 // UUID epoch (October 15, 1582) and current time.
-func (g *rfc4122Generator) getEpoch() uint64 {
+func (g *rfc4122AndCombGenerator) getEpoch() uint64 {
 	return epochStart + uint64(g.epochFunc().UnixNano()/100)
 }
 

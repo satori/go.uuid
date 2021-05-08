@@ -84,6 +84,11 @@ func Equal(u1 UUID, u2 UUID) bool {
 	return bytes.Equal(u1[:], u2[:])
 }
 
+// Equal returns true if this uuid and other uuid equals, otherwise false
+func (u UUID) Equal(other UUID) bool {
+	return bytes.Equal(u[:], other[:])
+}
+
 // Version returns algorithm version used to generate UUID.
 func (u UUID) Version() byte {
 	return u[6] >> 4

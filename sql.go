@@ -49,6 +49,17 @@ func (u *UUID) Scan(src interface{}) error {
 	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
 }
 
+// Value implements the driver.Valuer interface.
+func (u CombUUID) Value() (driver.Value, error) {
+	return u.String(), nil
+}
+
+// Scan implements the sql.Scanner interface.
+func (u *CombUUID) Scan(src interface{}) error {
+	var uuid = UUID(*u)
+	return uuid.Scan(src)
+}
+
 // NullUUID can be used with the standard sql package to represent a
 // UUID value that can be NULL in the database
 type NullUUID struct {
