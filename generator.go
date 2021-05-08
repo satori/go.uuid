@@ -69,14 +69,14 @@ func NewV4() (UUID, error) {
 	return global.NewV4()
 }
 
-// NewCombV1 returns ordered UUID based on current timestamp and MAC address.
-func NewCombV1() (UUID, error) {
+// NewCombV1 returns ordered CombUUID based on current timestamp and MAC address.
+func NewCombV1() (CombUUID, error) {
 	return global.NewCombV1()
 }
 
-// NewCombV4 returns UUID based on current timestamp and random generated UUID
+// NewCombV4 returns CombUUID based on current timestamp and random generated UUID
 // with ordered created time in 100ns precision.
-func NewCombV4() (UUID, error) {
+func NewCombV4() (CombUUID, error) {
 	return global.NewCombV4()
 }
 
@@ -95,8 +95,8 @@ type Generator interface {
 	NewV5(ns UUID, name string) UUID
 
 	// COMB
-	NewCombV1() (UUID, error)
-	NewCombV4() (UUID, error)
+	NewCombV1() (CombUUID, error)
+	NewCombV4() (CombUUID, error)
 }
 
 // Default generator implementation.
@@ -200,12 +200,12 @@ func (g *rfc4122AndCombGenerator) NewV5(ns UUID, name string) UUID {
 }
 
 // NewCombV1 returns nonstandard UUID based on V1 RFC4122 with timestamp bytes in the front
-func (g *rfc4122AndCombGenerator) NewCombV1() (UUID, error) {
-	u := UUID{}
+func (g *rfc4122AndCombGenerator) NewCombV1() (CombUUID, error) {
+	u := CombUUID{}
 
 	timeNow, clockSeq, err := g.getClockSequence()
 	if err != nil {
-		return Nil, err
+		return CombUUID(Nil), err
 	}
 
 	binary.BigEndian.PutUint16(u[0:], uint16(timeNow>>48))
@@ -215,33 +215,31 @@ func (g *rfc4122AndCombGenerator) NewCombV1() (UUID, error) {
 
 	hardwareAddr, err := g.getHardwareAddr()
 	if err != nil {
-		return Nil, err
+		return CombUUID(Nil), err
 	}
 	copy(u[10:], hardwareAddr)
 
 	u.SetVersion(V1)
-	u.SetVariant(VariantFuture)
 
 	return u, nil
 }
 
 // NewCombV4 returns nonstandard UUID based on V4 RFC4122
 // with timestamp bytes in the front (not fully random)
-func (g *rfc4122AndCombGenerator) NewCombV4() (UUID, error) {
-	u := UUID{}
+func (g *rfc4122AndCombGenerator) NewCombV4() (CombUUID, error) {
+	u := CombUUID{}
 
-	timeNow := time.Now().UnixNano()
+	timeNow := g.getEpoch()
 
 	binary.BigEndian.PutUint16(u[0:], uint16(timeNow>>48))
 	binary.BigEndian.PutUint16(u[2:], uint16(timeNow>>32))
 	binary.BigEndian.PutUint32(u[4:], uint32(timeNow))
 
 	if _, err := io.ReadFull(g.rand, u[8:]); err != nil {
-		return Nil, err
+		return CombUUID(Nil), err
 	}
 
 	u.SetVersion(V4)
-	u.SetVariant(VariantFuture)
 
 	return u, nil
 }

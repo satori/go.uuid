@@ -245,7 +245,6 @@ func (s *genTestSuite) TestNewCombV1(c *C) {
 	u1, err := NewCombV1()
 	c.Assert(err, IsNil)
 	c.Assert(u1.Version(), Equals, V1)
-	c.Assert(u1.Variant(), Equals, VariantFuture)
 
 	u2, err := NewCombV1()
 	c.Assert(err, IsNil)
@@ -275,7 +274,7 @@ func (s *genTestSuite) TestNewCombV1FaultyRand(c *C) {
 	}
 	u1, err := g.NewCombV1()
 	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	c.Assert(u1, Equals, CombUUID(Nil))
 }
 
 func (s *genTestSuite) TestNewCombV1MissingNetworkInterfaces(c *C) {
@@ -302,7 +301,27 @@ func (s *genTestSuite) TestNewCombV1MissingNetInterfacesAndFaultyRand(c *C) {
 	}
 	u1, err := g.NewCombV1()
 	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	c.Assert(u1, Equals, CombUUID(Nil))
+}
+
+func (s *genTestSuite) TestNewCombV1Time(c *C) {
+	now := time.Unix(0, 0)
+
+	g := &rfc4122AndCombGenerator{
+		epochFunc: func() time.Time {
+			return now
+		},
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
+	}
+
+	u1, err := g.NewCombV1()
+	c.Assert(err, IsNil)
+
+	if err == nil {
+		ut := u1.Time()
+		c.Assert(ut.Unix(), Equals, now.Unix())
+	}
 }
 
 func (s *genTestSuite) TestCombV1OrderedUUID(c *C) {
@@ -331,7 +350,6 @@ func (s *genTestSuite) TestNewCombV4(c *C) {
 	u1, err := NewCombV4()
 	c.Assert(err, IsNil)
 	c.Assert(u1.Version(), Equals, V4)
-	c.Assert(u1.Variant(), Equals, VariantFuture)
 
 	u2, err := NewCombV4()
 	c.Assert(err, IsNil)
@@ -346,7 +364,7 @@ func (s *genTestSuite) TestNewCombV4FaultyRand(c *C) {
 	}
 	u1, err := g.NewCombV4()
 	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	c.Assert(u1, Equals, CombUUID(Nil))
 }
 
 func (s *genTestSuite) TestNewCombV4PartialRead(c *C) {
@@ -363,7 +381,27 @@ func (s *genTestSuite) TestNewCombV4PartialRead(c *C) {
 	c.Assert(mostlyZeros, Equals, false)
 }
 
-func (s *genTestSuite) TestCombV4OrderedUUIDIn1nsRange(c *C) {
+func (s *genTestSuite) TestNewCombV4Time(c *C) {
+	now := time.Unix(0, 0)
+
+	g := &rfc4122AndCombGenerator{
+		epochFunc: func() time.Time {
+			return now
+		},
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
+	}
+
+	u1, err := g.NewCombV4()
+	c.Assert(err, IsNil)
+
+	if err == nil {
+		ut := u1.Time()
+		c.Assert(ut.Unix(), Equals, now.Unix())
+	}
+}
+
+func (s *genTestSuite) TestCombV4OrderedUUIDIn100nsRange(c *C) {
 	var uuids []string
 	for i := 0; i < c.N; i++ {
 		uuid, err := NewCombV4()
@@ -371,7 +409,7 @@ func (s *genTestSuite) TestCombV4OrderedUUIDIn1nsRange(c *C) {
 			uuids = append(uuids, uuid.String())
 		}
 
-		time.Sleep(1 * time.Nanosecond)
+		time.Sleep(100 * time.Nanosecond)
 	}
 
 	sorted := sort.SliceIsSorted(uuids, func(i, j int) bool {

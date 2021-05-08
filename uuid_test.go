@@ -51,6 +51,9 @@ func (s *testSuite) TestString(c *C) {
 func (s *testSuite) TestEqual(c *C) {
 	c.Assert(Equal(NamespaceDNS, NamespaceDNS), Equals, true)
 	c.Assert(Equal(NamespaceDNS, NamespaceURL), Equals, false)
+
+	c.Assert(NamespaceDNS.Equal(NamespaceDNS), Equals, true)
+	c.Assert(NamespaceDNS.Equal(NamespaceURL), Equals, false)
 }
 
 func (s *testSuite) TestVersion(c *C) {
