@@ -230,7 +230,7 @@ func (g *rfc4122AndCombGenerator) NewCombV1() (UUID, error) {
 func (g *rfc4122AndCombGenerator) NewCombV4() (UUID, error) {
 	u := UUID{}
 
-	timeNow := g.getEpoch()
+	timeNow := time.Now().UnixNano()
 
 	binary.BigEndian.PutUint16(u[0:], uint16(timeNow>>48))
 	binary.BigEndian.PutUint16(u[2:], uint16(timeNow>>32))

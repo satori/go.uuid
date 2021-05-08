@@ -363,7 +363,7 @@ func (s *genTestSuite) TestNewCombV4PartialRead(c *C) {
 	c.Assert(mostlyZeros, Equals, false)
 }
 
-func (s *genTestSuite) TestCombV4OrderedUUIDIn100nsRange(c *C) {
+func (s *genTestSuite) TestCombV4OrderedUUIDIn1nsRange(c *C) {
 	var uuids []string
 	for i := 0; i < c.N; i++ {
 		uuid, err := NewCombV4()
@@ -371,7 +371,7 @@ func (s *genTestSuite) TestCombV4OrderedUUIDIn100nsRange(c *C) {
 			uuids = append(uuids, uuid.String())
 		}
 
-		time.Sleep(100 * time.Nanosecond)
+		time.Sleep(1 * time.Nanosecond)
 	}
 
 	sorted := sort.SliceIsSorted(uuids, func(i, j int) bool {
