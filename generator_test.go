@@ -26,6 +26,8 @@ import (
 	"crypto/rand"
 	"fmt"
 	"net"
+	"sort"
+	"strings"
 	"testing/iotest"
 	"time"
 
@@ -61,7 +63,7 @@ func (s *genTestSuite) TestNewV1(c *C) {
 }
 
 func (s *genTestSuite) TestNewV1EpochStale(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc: func() time.Time {
 			return time.Unix(0, 0)
 		},
@@ -76,7 +78,7 @@ func (s *genTestSuite) TestNewV1EpochStale(c *C) {
 }
 
 func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
@@ -87,7 +89,7 @@ func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
 }
 
 func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
 			return []byte{}, fmt.Errorf("uuid: no hw address found")
@@ -99,7 +101,7 @@ func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
 }
 
 func (s *genTestSuite) TestNewV1MissingNetInterfacesAndFaultyRand(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
 			return []byte{}, fmt.Errorf("uuid: no hw address found")
@@ -137,7 +139,7 @@ func (s *genTestSuite) TestNewV2(c *C) {
 }
 
 func (s *genTestSuite) TestNewV2FaultyRand(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
@@ -187,7 +189,7 @@ func (s *genTestSuite) TestNewV4(c *C) {
 }
 
 func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
@@ -198,7 +200,7 @@ func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
 }
 
 func (s *genTestSuite) TestNewV4PartialRead(c *C) {
-	g := &rfc4122Generator{
+	g := &rfc4122AndCombGenerator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       iotest.OneByteReader(rand.Reader),
@@ -236,5 +238,151 @@ func (s *genTestSuite) TestNewV5(c *C) {
 func (s *genTestSuite) BenchmarkNewV5(c *C) {
 	for i := 0; i < c.N; i++ {
 		NewV5(NamespaceDNS, "www.example.com")
+	}
+}
+
+func (s *genTestSuite) TestNewCombV1(c *C) {
+	u1, err := NewCombV1()
+	c.Assert(err, IsNil)
+	c.Assert(u1.Version(), Equals, V1)
+	c.Assert(u1.Variant(), Equals, VariantFuture)
+
+	u2, err := NewCombV1()
+	c.Assert(err, IsNil)
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestNewCombV1EpochStale(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc: func() time.Time {
+			return time.Unix(0, 0)
+		},
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
+	}
+	u1, err := g.NewCombV1()
+	c.Assert(err, IsNil)
+	u2, err := g.NewCombV1()
+	c.Assert(err, IsNil)
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestNewCombV1FaultyRand(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
+	}
+	u1, err := g.NewCombV1()
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) TestNewCombV1MissingNetworkInterfaces(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc: time.Now,
+		hwAddrFunc: func() (net.HardwareAddr, error) {
+			return []byte{}, fmt.Errorf("uuid: no hw address found")
+		},
+		rand: rand.Reader,
+	}
+	_, err := g.NewCombV1()
+	c.Assert(err, IsNil)
+}
+
+func (s *genTestSuite) TestNewCombV1MissingNetInterfacesAndFaultyRand(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc: time.Now,
+		hwAddrFunc: func() (net.HardwareAddr, error) {
+			return []byte{}, fmt.Errorf("uuid: no hw address found")
+		},
+		rand: &faultyReader{
+			readToFail: 1,
+		},
+	}
+	u1, err := g.NewCombV1()
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) TestCombV1OrderedUUID(c *C) {
+	var uuids []string
+	for i := 0; i < c.N; i++ {
+		uuid, err := NewCombV1()
+		if err == nil {
+			uuids = append(uuids, uuid.String())
+		}
+	}
+
+	sorted := sort.SliceIsSorted(uuids, func(i, j int) bool {
+		return strings.Compare(uuids[i], uuids[j]) < 0
+	})
+
+	c.Assert(sorted, Equals, true)
+}
+
+func (s *genTestSuite) BenchmarkNewCombV1(c *C) {
+	for i := 0; i < c.N; i++ {
+		NewCombV1()
+	}
+}
+
+func (s *genTestSuite) TestNewCombV4(c *C) {
+	u1, err := NewCombV4()
+	c.Assert(err, IsNil)
+	c.Assert(u1.Version(), Equals, V4)
+	c.Assert(u1.Variant(), Equals, VariantFuture)
+
+	u2, err := NewCombV4()
+	c.Assert(err, IsNil)
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestNewCombV4FaultyRand(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
+	}
+	u1, err := g.NewCombV4()
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) TestNewCombV4PartialRead(c *C) {
+	g := &rfc4122AndCombGenerator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       iotest.OneByteReader(rand.Reader),
+	}
+	u1, err := g.NewCombV4()
+	zeros := bytes.Count(u1.Bytes(), []byte{0})
+	mostlyZeros := zeros >= 10
+
+	c.Assert(err, IsNil)
+	c.Assert(mostlyZeros, Equals, false)
+}
+
+func (s *genTestSuite) TestCombV4OrderedUUIDIn100nsRange(c *C) {
+	var uuids []string
+	for i := 0; i < c.N; i++ {
+		uuid, err := NewCombV4()
+		if err == nil {
+			uuids = append(uuids, uuid.String())
+		}
+
+		time.Sleep(100 * time.Nanosecond)
+	}
+
+	sorted := sort.SliceIsSorted(uuids, func(i, j int) bool {
+		return strings.Compare(uuids[i], uuids[j]) < 0
+	})
+
+	c.Assert(sorted, Equals, true)
+}
+
+func (s *genTestSuite) BenchmarkNewCombV4(c *C) {
+	for i := 0; i < c.N; i++ {
+		NewCombV4()
 	}
 }
