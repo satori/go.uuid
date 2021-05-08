@@ -69,12 +69,13 @@ func NewV4() (UUID, error) {
 	return global.NewV4()
 }
 
-// NewCombV1 returns UUID based on current timestamp and MAC address with ordered-time.
+// NewCombV1 returns ordered UUID based on current timestamp and MAC address.
 func NewCombV1() (UUID, error) {
 	return global.NewCombV1()
 }
 
-// NewCombV4 returns UUID based on current timestamp and random generated UUID with ordered-time.
+// NewCombV4 returns UUID based on current timestamp and random generated UUID
+// with ordered created time in 100ns precision.
 func NewCombV4() (UUID, error) {
 	return global.NewCombV4()
 }
