@@ -74,6 +74,11 @@ func NewV5(ns UUID, name string) UUID {
 	return global.NewV5(ns, name)
 }
 
+// NewV6 returns UUID based on current timestamp and MAC address.
+func NewV6() (UUID, error) {
+	return global.NewV6()
+}
+
 // Generator provides interface for generating UUIDs.
 type Generator interface {
 	NewV1() (UUID, error)
@@ -81,6 +86,7 @@ type Generator interface {
 	NewV3(ns UUID, name string) UUID
 	NewV4() (UUID, error)
 	NewV5(ns UUID, name string) UUID
+	NewV6() (UUID, error)
 }
 
 // Default generator implementation.
@@ -181,6 +187,31 @@ func (g *rfc4122Generator) NewV5(ns UUID, name string) UUID {
 	u.SetVariant(VariantRFC4122)
 
 	return u
+}
+
+// NewV6 returns UUID based on current timestamp and a pseudo-random node value which is
+// suitable for use as a database key in that it has good index locality, can be sorted and does not
+// expose a hardware address.
+// See https://datatracker.ietf.org/doc/html/draft-peabody-dispatch-new-uuid-format for RFC draft.
+func (g *rfc4122Generator) NewV6() (UUID, error) {
+	u := UUID{}
+
+	timeNow, clockSeq, err := g.getClockSequence()
+	if err != nil {
+		return Nil, err
+	}
+	binary.BigEndian.PutUint32(u[0:], uint32(timeNow>>32))
+	binary.BigEndian.PutUint32(u[4:], uint32(timeNow))
+	binary.BigEndian.PutUint16(u[8:], clockSeq)
+
+	if _, err := io.ReadFull(g.rand, u[10:16]); err != nil {
+		return Nil, err
+	}
+
+	u.SetVersion(V6)
+	u.SetVariant(VariantRFC4122)
+
+	return u, nil
 }
 
 // Returns epoch and clock sequence.

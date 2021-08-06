@@ -238,3 +238,45 @@ func (s *genTestSuite) BenchmarkNewV5(c *C) {
 		NewV5(NamespaceDNS, "www.example.com")
 	}
 }
+
+func (s *genTestSuite) TestNewV6(c *C) {
+	u1, err1 := NewV6()
+	u2, err2 := NewV6()
+	c.Assert(err1, IsNil)
+	c.Assert(err2, IsNil)
+	c.Assert(u1.Version(), Equals, V6)
+	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestNewV6EpochStale(c *C) {
+	g := &rfc4122Generator{
+		epochFunc: func() time.Time {
+			return time.Unix(0, 0)
+		},
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       rand.Reader,
+	}
+	u1, err := g.NewV6()
+	c.Assert(err, IsNil)
+	u2, err := g.NewV6()
+	c.Assert(err, IsNil)
+	c.Assert(u1, Not(Equals), u2)
+}
+
+func (s *genTestSuite) TestNewV6FaultyRand(c *C) {
+	g := &rfc4122Generator{
+		epochFunc:  time.Now,
+		hwAddrFunc: defaultHWAddrFunc,
+		rand:       &faultyReader{},
+	}
+	u1, err := g.NewV6()
+	c.Assert(err, NotNil)
+	c.Assert(u1, Equals, Nil)
+}
+
+func (s *genTestSuite) BenchmarkNewV6(c *C) {
+	for i := 0; i < c.N; i++ {
+		NewV6()
+	}
+}

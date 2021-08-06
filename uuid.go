@@ -44,6 +44,7 @@ const (
 	V3
 	V4
 	V5
+	V6
 )
 
 // UUID layout variants.
