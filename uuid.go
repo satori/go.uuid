@@ -27,6 +27,7 @@ package uuid
 import (
 	"bytes"
 	"encoding/hex"
+	"regexp"
 )
 
 // Size of a UUID in bytes.
@@ -159,4 +160,10 @@ func Must(u UUID, err error) UUID {
 		panic(err)
 	}
 	return u
+}
+
+var regXUUIDString = regexp.MustCompile(`[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}`)
+
+func StringIsUUID(s string) bool {
+	return regXUUIDString.MatchString(s)
 }
