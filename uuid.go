@@ -44,6 +44,8 @@ const (
 	V3
 	V4
 	V5
+	V6
+	V7
 )
 
 // UUID layout variants.
@@ -152,6 +154,7 @@ func (u *UUID) SetVariant(v byte) {
 // Must is a helper that wraps a call to a function returning (UUID, error)
 // and panics if the error is non-nil. It is intended for use in variable
 // initializations such as
+//
 //	var packageUUID = uuid.Must(uuid.FromString("123e4567-e89b-12d3-a456-426655440000"));
 func Must(u UUID, err error) UUID {
 	if err != nil {

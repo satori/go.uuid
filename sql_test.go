@@ -22,115 +22,111 @@
 package uuid
 
 import (
-	. "gopkg.in/check.v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"testing"
 )
 
-type sqlTestSuite struct{}
-
-var _ = Suite(&sqlTestSuite{})
-
-func (s *sqlTestSuite) TestValue(c *C) {
+func TestValue(t *testing.T) {
 	u, err := FromString("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
 
 	val, err := u.Value()
-	c.Assert(err, IsNil)
-	c.Assert(val, Equals, u.String())
+	require.NoError(t, err)
+	assert.Equal(t, u.String(), val)
 }
 
-func (s *sqlTestSuite) TestValueNil(c *C) {
+func TestValueNil(t *testing.T) {
 	u := UUID{}
 
 	val, err := u.Value()
-	c.Assert(err, IsNil)
-	c.Assert(val, Equals, Nil.String())
+	require.NoError(t, err)
+	assert.Equal(t, Nil.String(), val)
 }
 
-func (s *sqlTestSuite) TestNullUUIDValueNil(c *C) {
+func TestNullUUIDValueNil(t *testing.T) {
 	u := NullUUID{}
 
 	val, err := u.Value()
-	c.Assert(err, IsNil)
-	c.Assert(val, IsNil)
+	require.NoError(t, err)
+	assert.Nil(t, val)
 }
 
-func (s *sqlTestSuite) TestScanBinary(c *C) {
+func TestScanBinary(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	u1 := UUID{}
 	err := u1.Scan(b1)
-	c.Assert(err, IsNil)
-	c.Assert(u, Equals, u1)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
-	b2 := []byte{}
+	var b2 []byte
 	u2 := UUID{}
-
 	err = u2.Scan(b2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *sqlTestSuite) TestScanString(c *C) {
+func TestScanString(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 
 	u1 := UUID{}
 	err := u1.Scan(s1)
-	c.Assert(err, IsNil)
-	c.Assert(u, Equals, u1)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
 	s2 := ""
 	u2 := UUID{}
-
 	err = u2.Scan(s2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *sqlTestSuite) TestScanText(c *C) {
+func TestScanText(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	u1 := UUID{}
 	err := u1.Scan(b1)
-	c.Assert(err, IsNil)
-	c.Assert(u, Equals, u1)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
 	b2 := []byte("")
 	u2 := UUID{}
 	err = u2.Scan(b2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *sqlTestSuite) TestScanUnsupported(c *C) {
+func TestScanUnsupported(t *testing.T) {
 	u := UUID{}
 
 	err := u.Scan(true)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *sqlTestSuite) TestScanNil(c *C) {
+func TestScanNil(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	err := u.Scan(nil)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *sqlTestSuite) TestNullUUIDScanValid(c *C) {
+func TestNullUUIDScanValid(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 
 	u1 := NullUUID{}
 	err := u1.Scan(s1)
-	c.Assert(err, IsNil)
-	c.Assert(u1.Valid, Equals, true)
-	c.Assert(u1.UUID, Equals, u)
+	require.NoError(t, err)
+	assert.True(t, u1.Valid)
+	assert.Equal(t, u, u1.UUID)
 }
 
-func (s *sqlTestSuite) TestNullUUIDScanNil(c *C) {
+func TestNullUUIDScanNil(t *testing.T) {
 	u := NullUUID{UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}, true}
 
 	err := u.Scan(nil)
-	c.Assert(err, IsNil)
-	c.Assert(u.Valid, Equals, false)
-	c.Assert(u.UUID, Equals, Nil)
+	require.NoError(t, err)
+	assert.False(t, u.Valid)
+	assert.Equal(t, Nil, u.UUID)
 }

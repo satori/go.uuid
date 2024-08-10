@@ -1,6 +1,8 @@
 # UUID package for Go language
 
 [![Build Status](https://travis-ci.org/satori/go.uuid.svg?branch=master)](https://travis-ci.org/satori/go.uuid)
+![CI](https://github.com/satori/go.uuid/actions/workflows/actions.yml/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/satori/go.uuid)](https://goreportcard.com/report/github.com/satori/go.uuid)
 [![Coverage Status](https://coveralls.io/repos/github/satori/go.uuid/badge.svg?branch=master)](https://coveralls.io/github/satori/go.uuid)
 [![GoDoc](http://godoc.org/github.com/satori/go.uuid?status.svg)](http://godoc.org/github.com/satori/go.uuid)
 

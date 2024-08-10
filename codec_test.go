@@ -22,149 +22,138 @@
 package uuid
 
 import (
-	"bytes"
+	"testing"
 
-	. "gopkg.in/check.v1"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-type codecTestSuite struct{}
-
-var _ = Suite(&codecTestSuite{})
-
-func (s *codecTestSuite) TestFromBytes(c *C) {
+func TestFromBytes(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	u1, err := FromBytes(b1)
-	c.Assert(err, IsNil)
-	c.Assert(u1, Equals, u)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
-	b2 := []byte{}
+	var b2 []byte
 	_, err = FromBytes(b2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *codecTestSuite) BenchmarkFromBytes(c *C) {
+func BenchmarkFromBytes(b *testing.B) {
 	bytes := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
-	for i := 0; i < c.N; i++ {
-		FromBytes(bytes)
+	for i := 0; i < b.N; i++ {
+		_, _ = FromBytes(bytes)
 	}
 }
 
-func (s *codecTestSuite) TestMarshalBinary(c *C) {
+func TestMarshalBinary(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	b2, err := u.MarshalBinary()
-	c.Assert(err, IsNil)
-	c.Assert(bytes.Equal(b1, b2), Equals, true)
+	require.NoError(t, err)
+	assert.Equal(t, b1, b2)
 }
 
-func (s *codecTestSuite) BenchmarkMarshalBinary(c *C) {
+func BenchmarkMarshalBinary(b *testing.B) {
 	u, err := NewV4()
-	c.Assert(err, IsNil)
-	for i := 0; i < c.N; i++ {
-		u.MarshalBinary()
+	require.NoError(b, err)
+	for i := 0; i < b.N; i++ {
+		_, _ = u.MarshalBinary()
 	}
 }
 
-func (s *codecTestSuite) TestUnmarshalBinary(c *C) {
+func TestUnmarshalBinary(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
 	u1 := UUID{}
 	err := u1.UnmarshalBinary(b1)
-	c.Assert(err, IsNil)
-	c.Assert(u1, Equals, u)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
-	b2 := []byte{}
+	var b2 []byte
 	u2 := UUID{}
 	err = u2.UnmarshalBinary(b2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *codecTestSuite) TestFromString(c *C) {
+func TestFromString(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 
-	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-	s2 := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
-	s3 := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-	s4 := "6ba7b8109dad11d180b400c04fd430c8"
-	s5 := "urn:uuid:6ba7b8109dad11d180b400c04fd430c8"
+	tests := []struct {
+		input    string
+		expected UUID
+	}{
+		{"6ba7b810-9dad-11d1-80b4-00c04fd430c8", u},
+		{"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}", u},
+		{"urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8", u},
+		{"6ba7b8109dad11d180b400c04fd430c8", u},
+		{"urn:uuid:6ba7b8109dad11d180b400c04fd430c8", u},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			u1, err := FromString(tt.input)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, u1)
+		})
+	}
 
 	_, err := FromString("")
-	c.Assert(err, NotNil)
-
-	u1, err := FromString(s1)
-	c.Assert(err, IsNil)
-	c.Assert(u1, Equals, u)
-
-	u2, err := FromString(s2)
-	c.Assert(err, IsNil)
-	c.Assert(u2, Equals, u)
-
-	u3, err := FromString(s3)
-	c.Assert(err, IsNil)
-	c.Assert(u3, Equals, u)
-
-	u4, err := FromString(s4)
-	c.Assert(err, IsNil)
-	c.Assert(u4, Equals, u)
-
-	u5, err := FromString(s5)
-	c.Assert(err, IsNil)
-	c.Assert(u5, Equals, u)
+	assert.Error(t, err)
 }
 
-func (s *codecTestSuite) BenchmarkFromString(c *C) {
+func BenchmarkFromString(b *testing.B) {
 	str := "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-	for i := 0; i < c.N; i++ {
-		FromString(str)
+	for i := 0; i < b.N; i++ {
+		_, _ = FromString(str)
 	}
 }
 
-func (s *codecTestSuite) BenchmarkFromStringUrn(c *C) {
+func BenchmarkFromStringUrn(b *testing.B) {
 	str := "urn:uuid:6ba7b810-9dad-11d1-80b4-00c04fd430c8"
-	for i := 0; i < c.N; i++ {
-		FromString(str)
+	for i := 0; i < b.N; i++ {
+		_, err := FromString(str)
+		require.NoError(b, err)
 	}
 }
 
-func (s *codecTestSuite) BenchmarkFromStringWithBrackets(c *C) {
+func BenchmarkFromStringWithBrackets(b *testing.B) {
 	str := "{6ba7b810-9dad-11d1-80b4-00c04fd430c8}"
-	for i := 0; i < c.N; i++ {
-		FromString(str)
+	for i := 0; i < b.N; i++ {
+		_, err := FromString(str)
+		require.NoError(b, err)
 	}
 }
 
-func (s *codecTestSuite) TestFromStringShort(c *C) {
-	// Invalid 35-character UUID string
-	s1 := "6ba7b810-9dad-11d1-80b4-00c04fd430c"
-
-	for i := len(s1); i >= 0; i-- {
-		_, err := FromString(s1[:i])
-		c.Assert(err, NotNil)
+func TestFromStringShort(t *testing.T) {
+	shortString := "6ba7b810-9dad-11d1-80b4-00c04fd430c"
+	for i := len(shortString); i >= 0; i-- {
+		_, err := FromString(shortString[:i])
+		assert.Error(t, err)
 	}
 }
 
-func (s *codecTestSuite) TestFromStringLong(c *C) {
-	// Invalid 37+ character UUID string
-	strings := []string{
+func TestFromStringLong(t *testing.T) {
+	longStrings := []string{
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8=",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 		"{6ba7b810-9dad-11d1-80b4-00c04fd430c8}f",
 		"6ba7b810-9dad-11d1-80b4-00c04fd430c800c04fd430c8",
 	}
-
-	for _, str := range strings {
-		_, err := FromString(str)
-		c.Assert(err, NotNil)
+	for _, str := range longStrings {
+		t.Run(str, func(t *testing.T) {
+			_, err := FromString(str)
+			assert.Error(t, err)
+		})
 	}
 }
 
-func (s *codecTestSuite) TestFromStringInvalid(c *C) {
-	// Invalid UUID string formats
-	strings := []string{
+func TestFromStringInvalid(t *testing.T) {
+	invalidStrings := []string{
 		"6ba7b8109dad11d180b400c04fd430c86ba7b8109dad11d180b400c04fd430c8",
 		"urn:uuid:{6ba7b810-9dad-11d1-80b4-00c04fd430c8}",
 		"uuid:urn:6ba7b810-9dad-11d1-80b4-00c04fd430c8",
@@ -183,69 +172,71 @@ func (s *codecTestSuite) TestFromStringInvalid(c *C) {
 		"6ba7b8109dad11d180b4-00c04fd430c8",
 	}
 
-	for _, str := range strings {
-		_, err := FromString(str)
-		c.Assert(err, NotNil)
+	for _, str := range invalidStrings {
+		t.Run(str, func(t *testing.T) {
+			_, err := FromString(str)
+			assert.Error(t, err)
+		})
 	}
 }
 
-func (s *codecTestSuite) TestFromStringOrNil(c *C) {
+func TestFromStringOrNil(t *testing.T) {
 	u := FromStringOrNil("")
-	c.Assert(u, Equals, Nil)
+	assert.Equal(t, Nil, u)
 }
 
-func (s *codecTestSuite) TestFromBytesOrNil(c *C) {
-	b := []byte{}
+func TestFromBytesOrNil(t *testing.T) {
+	var b []byte
 	u := FromBytesOrNil(b)
-	c.Assert(u, Equals, Nil)
+	assert.Equal(t, Nil, u)
 }
 
-func (s *codecTestSuite) TestMarshalText(c *C) {
+func TestMarshalText(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	b2, err := u.MarshalText()
-	c.Assert(err, IsNil)
-	c.Assert(bytes.Equal(b1, b2), Equals, true)
+	require.NoError(t, err)
+	assert.Equal(t, b1, b2)
 }
 
-func (s *codecTestSuite) BenchmarkMarshalText(c *C) {
+func BenchmarkMarshalText(b *testing.B) {
 	u, err := NewV4()
-	c.Assert(err, IsNil)
-	for i := 0; i < c.N; i++ {
-		u.MarshalText()
+	require.NoError(b, err)
+	for i := 0; i < b.N; i++ {
+		_, _ = u.MarshalText()
 	}
 }
 
-func (s *codecTestSuite) TestUnmarshalText(c *C) {
+func TestUnmarshalText(t *testing.T) {
 	u := UUID{0x6b, 0xa7, 0xb8, 0x10, 0x9d, 0xad, 0x11, 0xd1, 0x80, 0xb4, 0x00, 0xc0, 0x4f, 0xd4, 0x30, 0xc8}
 	b1 := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 
 	u1 := UUID{}
 	err := u1.UnmarshalText(b1)
-	c.Assert(err, IsNil)
-	c.Assert(u1, Equals, u)
+	require.NoError(t, err)
+	assert.Equal(t, u, u1)
 
 	b2 := []byte("")
 	u2 := UUID{}
 	err = u2.UnmarshalText(b2)
-	c.Assert(err, NotNil)
+	assert.Error(t, err)
 }
 
-func (s *codecTestSuite) BenchmarkUnmarshalText(c *C) {
+func BenchmarkUnmarshalText(b *testing.B) {
 	bytes := []byte("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
 	u := UUID{}
-	for i := 0; i < c.N; i++ {
-		u.UnmarshalText(bytes)
+	for i := 0; i < b.N; i++ {
+		_ = u.UnmarshalText(bytes)
 	}
 }
 
 var sink string
 
-func (s *codecTestSuite) BenchmarkMarshalToString(c *C) {
+func BenchmarkMarshalToString(b *testing.B) {
 	u, err := NewV4()
-	c.Assert(err, IsNil)
-	for i := 0; i < c.N; i++ {
+	require.NoError(b, err)
+	for i := 0; i < b.N; i++ {
 		sink = u.String()
 	}
 }

@@ -27,6 +27,7 @@ import (
 )
 
 // Value implements the driver.Valuer interface.
+// It converts the UUID to its string representation.
 func (u UUID) Value() (driver.Value, error) {
 	return u.String(), nil
 }
@@ -44,9 +45,10 @@ func (u *UUID) Scan(src interface{}) error {
 
 	case string:
 		return u.UnmarshalText([]byte(src))
-	}
 
-	return fmt.Errorf("uuid: cannot convert %T to UUID", src)
+	default:
+		return fmt.Errorf("uuid: cannot convert %T to UUID", src)
+	}
 }
 
 // NullUUID can be used with the standard sql package to represent a
@@ -57,11 +59,11 @@ type NullUUID struct {
 }
 
 // Value implements the driver.Valuer interface.
+// It returns the UUID string value if valid, otherwise it returns nil.
 func (u NullUUID) Value() (driver.Value, error) {
 	if !u.Valid {
 		return nil, nil
 	}
-	// Delegate to UUID Value function
 	return u.UUID.Value()
 }
 
@@ -72,7 +74,6 @@ func (u *NullUUID) Scan(src interface{}) error {
 		return nil
 	}
 
-	// Delegate to UUID Scan function
 	u.Valid = true
 	return u.UUID.Scan(src)
 }

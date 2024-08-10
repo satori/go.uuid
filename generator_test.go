@@ -25,11 +25,12 @@ import (
 	"bytes"
 	"crypto/rand"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net"
+	"testing"
 	"testing/iotest"
 	"time"
-
-	. "gopkg.in/check.v1"
 )
 
 type faultyReader struct {
@@ -45,22 +46,18 @@ func (r *faultyReader) Read(dest []byte) (int, error) {
 	return rand.Read(dest)
 }
 
-type genTestSuite struct{}
-
-var _ = Suite(&genTestSuite{})
-
-func (s *genTestSuite) TestNewV1(c *C) {
+func TestNewV1(t *testing.T) {
 	u1, err := NewV1()
-	c.Assert(err, IsNil)
-	c.Assert(u1.Version(), Equals, V1)
-	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+	require.NoError(t, err)
+	assert.Equal(t, V1, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
 
 	u2, err := NewV1()
-	c.Assert(err, IsNil)
-	c.Assert(u1, Not(Equals), u2)
+	require.NoError(t, err)
+	assert.NotEqual(t, u1, u2)
 }
 
-func (s *genTestSuite) TestNewV1EpochStale(c *C) {
+func TestNewV1EpochStale(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc: func() time.Time {
 			return time.Unix(0, 0)
@@ -69,172 +66,213 @@ func (s *genTestSuite) TestNewV1EpochStale(c *C) {
 		rand:       rand.Reader,
 	}
 	u1, err := g.NewV1()
-	c.Assert(err, IsNil)
+	require.NoError(t, err)
+
 	u2, err := g.NewV1()
-	c.Assert(err, IsNil)
-	c.Assert(u1, Not(Equals), u2)
+	require.NoError(t, err)
+	assert.NotEqual(t, u1, u2)
 }
 
-func (s *genTestSuite) TestNewV1FaultyRand(c *C) {
+func TestNewV1FaultyRand(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
 	}
 	u1, err := g.NewV1()
-	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	require.Error(t, err)
+	assert.Equal(t, Nil, u1)
 }
 
-func (s *genTestSuite) TestNewV1MissingNetworkInterfaces(c *C) {
+func TestNewV1MissingNetworkInterfaces(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
-			return []byte{}, fmt.Errorf("uuid: no hw address found")
+			return nil, fmt.Errorf("uuid: no hw address found")
 		},
 		rand: rand.Reader,
 	}
-	_, err := g.NewV1()
-	c.Assert(err, IsNil)
+	u1, err := g.NewV1()
+	require.NoError(t, err)
+	assert.NotEqual(t, Nil, u1)
 }
 
-func (s *genTestSuite) TestNewV1MissingNetInterfacesAndFaultyRand(c *C) {
+func TestNewV1MissingNetInterfacesAndFaultyRand(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc: time.Now,
 		hwAddrFunc: func() (net.HardwareAddr, error) {
-			return []byte{}, fmt.Errorf("uuid: no hw address found")
+			return nil, fmt.Errorf("uuid: no hw address found")
 		},
 		rand: &faultyReader{
 			readToFail: 1,
 		},
 	}
 	u1, err := g.NewV1()
-	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	require.Error(t, err)
+	assert.Equal(t, Nil, u1)
 }
 
-func (s *genTestSuite) BenchmarkNewV1(c *C) {
-	for i := 0; i < c.N; i++ {
-		NewV1()
+func BenchmarkNewV1(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = NewV1()
 	}
 }
 
-func (s *genTestSuite) TestNewV2(c *C) {
+func TestNewV2(t *testing.T) {
 	u1, err := NewV2(DomainPerson)
-	c.Assert(err, IsNil)
-	c.Assert(u1.Version(), Equals, V2)
-	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+	require.NoError(t, err)
+	assert.Equal(t, V2, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
 
 	u2, err := NewV2(DomainGroup)
-	c.Assert(err, IsNil)
-	c.Assert(u2.Version(), Equals, V2)
-	c.Assert(u2.Variant(), Equals, VariantRFC4122)
+	require.NoError(t, err)
+	assert.Equal(t, V2, u2.Version())
+	assert.Equal(t, VariantRFC4122, u2.Variant())
 
 	u3, err := NewV2(DomainOrg)
-	c.Assert(err, IsNil)
-	c.Assert(u3.Version(), Equals, V2)
-	c.Assert(u3.Variant(), Equals, VariantRFC4122)
+	require.NoError(t, err)
+	assert.Equal(t, V2, u3.Version())
+	assert.Equal(t, VariantRFC4122, u3.Variant())
 }
 
-func (s *genTestSuite) TestNewV2FaultyRand(c *C) {
+func TestNewV2FaultyRand(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
 	}
 	u1, err := g.NewV2(DomainPerson)
-	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	require.Error(t, err)
+	assert.Equal(t, Nil, u1)
 }
 
-func (s *genTestSuite) BenchmarkNewV2(c *C) {
-	for i := 0; i < c.N; i++ {
-		NewV2(DomainPerson)
+func BenchmarkNewV2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = NewV2(DomainPerson)
 	}
 }
 
-func (s *genTestSuite) TestNewV3(c *C) {
+func TestNewV3(t *testing.T) {
 	u1 := NewV3(NamespaceDNS, "www.example.com")
-	c.Assert(u1.Version(), Equals, V3)
-	c.Assert(u1.Variant(), Equals, VariantRFC4122)
-	c.Assert(u1.String(), Equals, "5df41881-3aed-3515-88a7-2f4a814cf09e")
+	assert.Equal(t, V3, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
+	assert.Equal(t, "5df41881-3aed-3515-88a7-2f4a814cf09e", u1.String())
 
 	u2 := NewV3(NamespaceDNS, "example.com")
-	c.Assert(u2, Not(Equals), u1)
+	assert.NotEqual(t, u1, u2)
 
 	u3 := NewV3(NamespaceDNS, "example.com")
-	c.Assert(u3, Equals, u2)
+	assert.Equal(t, u2, u3)
 
 	u4 := NewV3(NamespaceURL, "example.com")
-	c.Assert(u4, Not(Equals), u3)
+	assert.NotEqual(t, u3, u4)
 }
 
-func (s *genTestSuite) BenchmarkNewV3(c *C) {
-	for i := 0; i < c.N; i++ {
+func BenchmarkNewV3(b *testing.B) {
+	for i := 0; i < b.N; i++ {
 		NewV3(NamespaceDNS, "www.example.com")
 	}
 }
 
-func (s *genTestSuite) TestNewV4(c *C) {
+func TestNewV4(t *testing.T) {
 	u1, err := NewV4()
-	c.Assert(err, IsNil)
-	c.Assert(u1.Version(), Equals, V4)
-	c.Assert(u1.Variant(), Equals, VariantRFC4122)
+	require.NoError(t, err)
+	assert.Equal(t, V4, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
 
 	u2, err := NewV4()
-	c.Assert(err, IsNil)
-	c.Assert(u1, Not(Equals), u2)
+	require.NoError(t, err)
+	assert.NotEqual(t, u1, u2)
 }
 
-func (s *genTestSuite) TestNewV4FaultyRand(c *C) {
+func TestNewV4FaultyRand(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       &faultyReader{},
 	}
 	u1, err := g.NewV4()
-	c.Assert(err, NotNil)
-	c.Assert(u1, Equals, Nil)
+	require.Error(t, err)
+	assert.Equal(t, Nil, u1)
 }
 
-func (s *genTestSuite) TestNewV4PartialRead(c *C) {
+func TestNewV4PartialRead(t *testing.T) {
 	g := &rfc4122Generator{
 		epochFunc:  time.Now,
 		hwAddrFunc: defaultHWAddrFunc,
 		rand:       iotest.OneByteReader(rand.Reader),
 	}
 	u1, err := g.NewV4()
+	require.NoError(t, err)
+
 	zeros := bytes.Count(u1.Bytes(), []byte{0})
 	mostlyZeros := zeros >= 10
 
-	c.Assert(err, IsNil)
-	c.Assert(mostlyZeros, Equals, false)
+	assert.False(t, mostlyZeros, "Generated UUID contains mostly zeros")
 }
 
-func (s *genTestSuite) BenchmarkNewV4(c *C) {
-	for i := 0; i < c.N; i++ {
-		NewV4()
+func BenchmarkNewV4(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = NewV4()
 	}
 }
 
-func (s *genTestSuite) TestNewV5(c *C) {
+func TestNewV5(t *testing.T) {
 	u1 := NewV5(NamespaceDNS, "www.example.com")
-	c.Assert(u1.Version(), Equals, V5)
-	c.Assert(u1.Variant(), Equals, VariantRFC4122)
-	c.Assert(u1.String(), Equals, "2ed6657d-e927-568b-95e1-2665a8aea6a2")
+	assert.Equal(t, V5, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
+	assert.Equal(t, "2ed6657d-e927-568b-95e1-2665a8aea6a2", u1.String())
 
 	u2 := NewV5(NamespaceDNS, "example.com")
-	c.Assert(u2, Not(Equals), u1)
+	assert.NotEqual(t, u1, u2)
 
 	u3 := NewV5(NamespaceDNS, "example.com")
-	c.Assert(u3, Equals, u2)
+	assert.Equal(t, u2, u3)
 
 	u4 := NewV5(NamespaceURL, "example.com")
-	c.Assert(u4, Not(Equals), u3)
+	assert.NotEqual(t, u3, u4)
 }
 
-func (s *genTestSuite) BenchmarkNewV5(c *C) {
-	for i := 0; i < c.N; i++ {
+func BenchmarkNewV5(b *testing.B) {
+	for i := 0; i < b.N; i++ {
 		NewV5(NamespaceDNS, "www.example.com")
+	}
+}
+
+func TestNewV6(t *testing.T) {
+	u1, err := NewV6()
+	require.NoError(t, err)
+	assert.Equal(t, V6, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
+
+	u2, err := NewV6()
+	require.NoError(t, err)
+	assert.NotEqual(t, u1, u2)
+	assert.True(t, bytes.Compare(u1[:6], u2[:6]) < 0 || bytes.Equal(u1[:6], u2[:6]))
+}
+
+func BenchmarkNewV6(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = NewV6()
+	}
+}
+
+func TestNewV7(t *testing.T) {
+	u1, err := NewV7()
+	require.NoError(t, err)
+	assert.Equal(t, V7, u1.Version())
+	assert.Equal(t, VariantRFC4122, u1.Variant())
+
+	u2, err := NewV7()
+	require.NoError(t, err)
+	assert.NotEqual(t, u1, u2)
+
+	assert.True(t, bytes.Compare(u1[:6], u2[:6]) < 0 || bytes.Equal(u1[:6], u2[:6]))
+	assert.NotEqual(t, u1[6:], u2[6:])
+}
+
+func BenchmarkNewV7(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = NewV7()
 	}
 }
